@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>YASHWAY Admin Login</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<section class="admin-login-section">
+
+    <div class="admin-login-card">
+
+        <div class="admin-login-logo">
+
+            <h1>YASHWAY</h1>
+
+            <p>Admin Panel</p>
+
+        </div>
+
+
+        <h2>Admin Login</h2>
+
+
+        {% if error %}
+
+        <div class="login-error">
+
+            {{ error }}
+
+        </div>
+
+        {% endif %}
+
+
+        <form method="POST">
+
+            <label>
+                Username
+            </label>
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Enter username"
+                required
+            >
+
+
+            <label>
+                Password
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="btn primary"
+            >
+                Login
+            </button>
+
+        </form>
+
+
+        <a href="/">
+            ← Back to YASHWAY
+        </a>
+
+    </div>
+
+</section>
+
+</body>
+
+</html>

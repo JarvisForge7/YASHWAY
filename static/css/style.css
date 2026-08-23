@@ -680,4 +680,71 @@ footer p {
     }
 
 }
+/* =====================================================
+   ADMIN LOGIN
+===================================================== */
+
+.admin-login-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.admin-login-card {
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    padding: 40px;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.admin-login-logo h1 {
+    margin-bottom: 5px;
+}
+
+.admin-login-logo p {
+    color: #64748b;
+    margin-bottom: 30px;
+}
+
+.admin-login-card form {
+    text-align: left;
+}
+
+.admin-login-card label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 7px;
+    font-weight: 600;
+}
+
+.admin-login-card input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.admin-login-card button {
+    width: 100%;
+    margin-top: 25px;
+}
+
+.login-error {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.admin-login-card > a {
+    display: inline-block;
+    margin-top: 25px;
+}
 }

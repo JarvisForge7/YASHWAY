@@ -42,6 +42,15 @@
             Providers
         </a>
 
+        <!-- LOGOUT -->
+
+        <a href="/admin/logout"
+           class="admin-logout">
+
+            Logout
+
+        </a>
+
     </nav>
 
 </header>
@@ -152,7 +161,9 @@
 
 
                 <span class="status">
+
                     {{ booking["status"] }}
+
                 </span>
 
             </div>
@@ -239,7 +250,9 @@
                         ✅ Assigned:
 
                         <strong>
+
                             {{ booking["provider"] }}
+
                         </strong>
 
                     </p>
@@ -249,10 +262,14 @@
 
 
                     <form
+
                         action="/admin/assign-provider/{{ booking['id'] }}"
+
                         method="POST"
+
                         class="assign-form"
                     >
+
 
                         <select
                             name="provider_id"
@@ -260,33 +277,43 @@
                         >
 
                             <option value="">
+
                                 Provider निवडा
+
                             </option>
 
 
                             {% for provider in providers %}
 
+
                                 {% if provider["service"] == booking["service"] %}
 
                                     <option
+
                                         value="{{ provider['id'] }}"
                                     >
 
                                         {{ provider["name"] }}
+
                                         —
+
                                         {{ provider["location"] }}
 
                                     </option>
 
                                 {% endif %}
 
+
                             {% endfor %}
+
 
                         </select>
 
 
                         <button
+
                             type="submit"
+
                             class="btn primary"
                         >
 
@@ -294,10 +321,12 @@
 
                         </button>
 
+
                     </form>
 
 
                 {% endif %}
+
 
             </div>
 
@@ -313,24 +342,38 @@
 
 
                 <form
+
                     action="/admin/update-booking/{{ booking['id'] }}"
+
                     method="POST"
+
                     class="management-form"
                 >
 
 
+                    <!-- SERVICE COST -->
+
                     <div class="management-field">
 
                         <label>
+
                             Service Cost
+
                         </label>
 
+
                         <input
+
                             type="number"
+
                             name="cost"
+
                             value="{{ booking['cost'] }}"
+
                             min="0"
+
                             step="0.01"
+
                             placeholder="₹"
                         >
 
@@ -338,18 +381,29 @@
 
 
 
+                    <!-- COMMISSION -->
+
                     <div class="management-field">
 
                         <label>
+
                             YASHWAY Commission
+
                         </label>
+
 
                         <input
+
                             type="number"
+
                             name="commission"
+
                             value="{{ booking['commission'] }}"
+
                             min="0"
+
                             step="0.01"
+
                             placeholder="₹"
                         >
 
@@ -357,52 +411,90 @@
 
 
 
+                    <!-- STATUS -->
+
                     <div class="management-field">
 
                         <label>
+
                             Status
+
                         </label>
+
 
                         <select name="status">
 
+
                             <option
+
                                 value="Pending"
+
                                 {% if booking["status"] == "Pending" %}
+
                                     selected
+
                                 {% endif %}
+
                             >
+
                                 Pending
+
                             </option>
 
 
+
                             <option
+
                                 value="Accepted"
+
                                 {% if booking["status"] == "Accepted" %}
+
                                     selected
+
                                 {% endif %}
+
                             >
+
                                 Accepted
+
                             </option>
 
 
+
                             <option
+
                                 value="Completed"
+
                                 {% if booking["status"] == "Completed" %}
+
                                     selected
+
                                 {% endif %}
+
                             >
+
                                 Completed
+
                             </option>
+
 
 
                             <option
+
                                 value="Cancelled"
+
                                 {% if booking["status"] == "Cancelled" %}
+
                                     selected
+
                                 {% endif %}
+
                             >
+
                                 Cancelled
+
                             </option>
+
 
                         </select>
 
@@ -410,8 +502,12 @@
 
 
 
+                    <!-- SAVE -->
+
                     <button
+
                         type="submit"
+
                         class="btn primary save-btn"
                     >
 
@@ -421,6 +517,7 @@
 
 
                 </form>
+
 
             </div>
 
@@ -434,24 +531,35 @@
                 <div>
 
                     <strong>
+
                         Service Cost
+
                     </strong>
 
+
                     <p>
+
                         ₹{{ booking["cost"] }}
+
                     </p>
 
                 </div>
 
 
+
                 <div>
 
                     <strong>
+
                         YASHWAY Commission
+
                     </strong>
 
+
                     <p>
+
                         ₹{{ booking["commission"] }}
+
                     </p>
 
                 </div>
@@ -472,12 +580,18 @@
         <div class="no-booking">
 
             <h3>
+
                 अजून कोणतीही Booking नाही.
+
             </h3>
 
+
             <p>
+
                 Customer booking केल्यावर
+
                 ती इथे दिसेल.
+
             </p>
 
         </div>
@@ -500,11 +614,16 @@
     <h3>YASHWAY</h3>
 
     <p>
+
         Ambad Local Service
+
     </p>
 
+
     <p>
+
         © 2026 YASHWAY
+
     </p>
 
 </footer>
