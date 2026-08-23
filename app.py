@@ -1,10 +1,33 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 import sqlite3
+import os
 from datetime import datetime
 
 app = Flask(__name__)
 
-DATABASE = "database.db"
+# =========================================================
+# APP CONFIG
+# =========================================================
+
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "YASHWAY_CHANGE_THIS_SECRET_KEY"
+)
+
+# Render वर database.py कुठेही चुकीच्या folder मध्ये तयार होऊ नये
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, "database.db")
+
+# Temporary admin credentials
+ADMIN_USERNAME = os.environ.get(
+    "ADMIN_USERNAME",
+    "admin"
+)
+
+ADMIN_PASSWORD = os.environ.get(
+    "ADMIN_PASSWORD",
+    "YASHWAY@123"
+)
 
 
 # =========================================================
@@ -12,8 +35,11 @@ DATABASE = "database.db"
 # =========================================================
 
 def get_db_connection():
+
     conn = sqlite3.connect(DATABASE)
+
     conn.row_factory = sqlite3.Row
+
     return conn
 
 
@@ -25,9 +51,9 @@ def init_db():
 
     conn = get_db_connection()
 
-    # -------------------------
+    # =====================================================
     # BOOKINGS TABLE
-    # -------------------------
+    # =====================================================
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
@@ -46,9 +72,9 @@ def init_db():
         )
     """)
 
-    # -------------------------
+    # =====================================================
     # PROVIDERS TABLE
-    # -------------------------
+    # =====================================================
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS providers (
@@ -57,13 +83,62 @@ def init_db():
             mobile TEXT NOT NULL,
             service TEXT NOT NULL,
             location TEXT NOT NULL,
+            username TEXT,
+            password TEXT,
             status TEXT DEFAULT 'Available',
             created_at TEXT NOT NULL
         )
     """)
 
+    # =====================================================
+    # PROVIDER TABLE MIGRATION
+    # =====================================================
+
+    columns = conn.execute(
+        "PRAGMA table_info(providers)"
+    ).fetchall()
+
+    column_names = [
+        column["name"]
+        for column in columns
+    ]
+
+    # Add username if missing
+
+    if "username" not in column_names:
+
+        conn.execute("""
+            ALTER TABLE providers
+            ADD COLUMN username TEXT
+        """)
+
+    # Add password if missing
+
+    if "password" not in column_names:
+
+        conn.execute("""
+            ALTER TABLE providers
+            ADD COLUMN password TEXT
+        """)
+
     conn.commit()
+
     conn.close()
+
+
+# =========================================================
+# IMPORTANT
+# INITIALIZE DATABASE WHEN APP STARTS
+# =========================================================
+#
+# हे Render/Gunicorn साठी खूप important आहे.
+# Gunicorn app.py ला import करतो त्यामुळे
+# if __name__ == "__main__" मधील init_db() चालत नाही.
+#
+# म्हणून init_db() इथेच चालवतो.
+# =========================================================
+
+init_db()
 
 
 # =========================================================
@@ -73,7 +148,9 @@ def init_db():
 @app.route("/")
 def home():
 
-    return render_template("index.html")
+    return render_template(
+        "index.html"
+    )
 
 
 # =========================================================
@@ -83,24 +160,70 @@ def home():
 @app.route("/services")
 def services():
 
-    return render_template("services.html")
+    return render_template(
+        "services.html"
+    )
 
 
 # =========================================================
 # CUSTOMER BOOKING
 # =========================================================
 
-@app.route("/booking", methods=["GET", "POST"])
+@app.route(
+    "/booking",
+    methods=["GET", "POST"]
+)
 def booking():
 
     if request.method == "POST":
 
-        name = request.form.get("name")
-        mobile = request.form.get("mobile")
-        service = request.form.get("service")
-        location = request.form.get("location")
-        date = request.form.get("date")
-        time = request.form.get("time")
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        mobile = request.form.get(
+            "mobile",
+            ""
+        ).strip()
+
+        service = request.form.get(
+            "service",
+            ""
+        ).strip()
+
+        location = request.form.get(
+            "location",
+            ""
+        ).strip()
+
+        date = request.form.get(
+            "date",
+            ""
+        ).strip()
+
+        time = request.form.get(
+            "time",
+            ""
+        ).strip()
+
+        # =================================================
+        # BASIC VALIDATION
+        # =================================================
+
+        if not all([
+            name,
+            mobile,
+            service,
+            location,
+            date,
+            time
+        ]):
+
+            return render_template(
+                "booking.html",
+                error="कृपया सर्व माहिती भरा."
+            )
 
         created_at = datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
@@ -108,9 +231,9 @@ def booking():
 
         conn = get_db_connection()
 
-        # -------------------------
+        # =================================================
         # SAVE BOOKING
-        # -------------------------
+        # =================================================
 
         cursor = conn.execute("""
             INSERT INTO bookings
@@ -123,6 +246,7 @@ def booking():
                 time,
                 created_at
             )
+
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             name,
@@ -134,21 +258,21 @@ def booking():
             created_at
         ))
 
-        # Get newly created booking ID
         booking_id = cursor.lastrowid
 
         conn.commit()
+
         conn.close()
 
-        # -------------------------
+        # =================================================
         # CREATE YASHWAY BOOKING ID
-        # -------------------------
+        # =================================================
 
         booking_code = f"YWS-{booking_id:04d}"
 
-        # -------------------------
+        # =================================================
         # SUCCESS PAGE
-        # -------------------------
+        # =================================================
 
         return render_template(
             "booking_success.html",
@@ -161,17 +285,23 @@ def booking():
             time=time
         )
 
-    return render_template("booking.html")
+    return render_template(
+        "booking.html"
+    )
 
 
 # =========================================================
 # TRACK BOOKING
 # =========================================================
 
-@app.route("/track", methods=["GET", "POST"])
+@app.route(
+    "/track",
+    methods=["GET", "POST"]
+)
 def track():
 
     booking = None
+
     searched = False
 
     if request.method == "POST":
@@ -188,9 +318,9 @@ def track():
 
         searched = True
 
-        # -------------------------
-        # CHECK BOOKING ID
-        # -------------------------
+        # =================================================
+        # CHECK BOOKING CODE
+        # =================================================
 
         if booking_code.startswith("YWS-"):
 
@@ -229,17 +359,105 @@ def track():
 
 
 # =========================================================
+# ADMIN LOGIN
+# =========================================================
+
+@app.route(
+    "/admin/login",
+    methods=["GET", "POST"]
+)
+def admin_login():
+
+    # Already logged in
+
+    if session.get(
+        "admin_logged_in"
+    ):
+
+        return redirect(
+            "/admin"
+        )
+
+    if request.method == "POST":
+
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        # =================================================
+        # CHECK LOGIN
+        # =================================================
+
+        if (
+            username == ADMIN_USERNAME
+            and password == ADMIN_PASSWORD
+        ):
+
+            session[
+                "admin_logged_in"
+            ] = True
+
+            return redirect(
+                "/admin"
+            )
+
+        return render_template(
+            "admin_login.html",
+            error="Username किंवा Password चुकीचा आहे."
+        )
+
+    return render_template(
+        "admin_login.html"
+    )
+
+
+# =========================================================
+# ADMIN LOGOUT
+# =========================================================
+
+@app.route("/admin/logout")
+def admin_logout():
+
+    session.pop(
+        "admin_logged_in",
+        None
+    )
+
+    return redirect(
+        "/admin/login"
+    )
+
+
+# =========================================================
 # ADMIN DASHBOARD
 # =========================================================
 
 @app.route("/admin")
 def admin():
 
+    # =====================================================
+    # LOGIN PROTECTION
+    # =====================================================
+
+    if not session.get(
+        "admin_logged_in"
+    ):
+
+        return redirect(
+            "/admin/login"
+        )
+
     conn = get_db_connection()
 
-    # -------------------------
+    # =====================================================
     # ALL BOOKINGS
-    # -------------------------
+    # =====================================================
 
     bookings = conn.execute("""
         SELECT *
@@ -247,9 +465,9 @@ def admin():
         ORDER BY id DESC
     """).fetchall()
 
-    # -------------------------
+    # =====================================================
     # ALL PROVIDERS
-    # -------------------------
+    # =====================================================
 
     providers = conn.execute("""
         SELECT *
@@ -257,18 +475,18 @@ def admin():
         ORDER BY name ASC
     """).fetchall()
 
-    # -------------------------
+    # =====================================================
     # TOTAL BOOKINGS
-    # -------------------------
+    # =====================================================
 
     total = conn.execute("""
         SELECT COUNT(*)
         FROM bookings
     """).fetchone()[0]
 
-    # -------------------------
+    # =====================================================
     # PENDING
-    # -------------------------
+    # =====================================================
 
     pending = conn.execute("""
         SELECT COUNT(*)
@@ -276,9 +494,9 @@ def admin():
         WHERE status = 'Pending'
     """).fetchone()[0]
 
-    # -------------------------
+    # =====================================================
     # COMPLETED
-    # -------------------------
+    # =====================================================
 
     completed = conn.execute("""
         SELECT COUNT(*)
@@ -286,9 +504,9 @@ def admin():
         WHERE status = 'Completed'
     """).fetchone()[0]
 
-    # -------------------------
+    # =====================================================
     # CANCELLED
-    # -------------------------
+    # =====================================================
 
     cancelled = conn.execute("""
         SELECT COUNT(*)
@@ -296,13 +514,18 @@ def admin():
         WHERE status = 'Cancelled'
     """).fetchone()[0]
 
-    # -------------------------
+    # =====================================================
     # TOTAL COMMISSION
-    # -------------------------
+    # =====================================================
 
     total_commission = conn.execute("""
-        SELECT COALESCE(SUM(commission), 0)
+        SELECT COALESCE(
+            SUM(commission),
+            0
+        )
+
         FROM bookings
+
         WHERE status = 'Completed'
     """).fetchone()[0]
 
@@ -328,7 +551,21 @@ def admin():
     "/admin/assign-provider/<int:booking_id>",
     methods=["POST"]
 )
-def assign_provider(booking_id):
+def assign_provider(
+    booking_id
+):
+
+    # =====================================================
+    # LOGIN PROTECTION
+    # =====================================================
+
+    if not session.get(
+        "admin_logged_in"
+    ):
+
+        return redirect(
+            "/admin/login"
+        )
 
     provider_id = request.form.get(
         "provider_id"
@@ -336,9 +573,9 @@ def assign_provider(booking_id):
 
     conn = get_db_connection()
 
-    # -------------------------
+    # =====================================================
     # FIND PROVIDER
-    # -------------------------
+    # =====================================================
 
     provider = conn.execute("""
         SELECT *
@@ -348,15 +585,17 @@ def assign_provider(booking_id):
         provider_id,
     )).fetchone()
 
-    # -------------------------
+    # =====================================================
     # ASSIGN PROVIDER
-    # -------------------------
+    # =====================================================
 
     if provider:
 
         conn.execute("""
             UPDATE bookings
+
             SET provider = ?
+
             WHERE id = ?
         """, (
             provider["name"],
@@ -367,7 +606,9 @@ def assign_provider(booking_id):
 
     conn.close()
 
-    return redirect("/admin")
+    return redirect(
+        "/admin"
+    )
 
 
 # =========================================================
@@ -378,7 +619,21 @@ def assign_provider(booking_id):
     "/admin/update-booking/<int:booking_id>",
     methods=["POST"]
 )
-def update_booking(booking_id):
+def update_booking(
+    booking_id
+):
+
+    # =====================================================
+    # LOGIN PROTECTION
+    # =====================================================
+
+    if not session.get(
+        "admin_logged_in"
+    ):
+
+        return redirect(
+            "/admin/login"
+        )
 
     cost = request.form.get(
         "cost",
@@ -395,31 +650,37 @@ def update_booking(booking_id):
         "Pending"
     )
 
-    # -------------------------
+    # =====================================================
     # CONVERT COST
-    # -------------------------
+    # =====================================================
 
     try:
 
         cost = float(cost)
 
-    except (ValueError, TypeError):
+    except (
+        ValueError,
+        TypeError
+    ):
 
         cost = 0
 
-
-    # -------------------------
+    # =====================================================
     # CONVERT COMMISSION
-    # -------------------------
+    # =====================================================
 
     try:
 
-        commission = float(commission)
+        commission = float(
+            commission
+        )
 
-    except (ValueError, TypeError):
+    except (
+        ValueError,
+        TypeError
+    ):
 
         commission = 0
-
 
     conn = get_db_connection()
 
@@ -440,9 +701,12 @@ def update_booking(booking_id):
     ))
 
     conn.commit()
+
     conn.close()
 
-    return redirect("/admin")
+    return redirect(
+        "/admin"
+    )
 
 
 # =========================================================
@@ -455,33 +719,67 @@ def update_booking(booking_id):
 )
 def providers():
 
+    # =====================================================
+    # LOGIN PROTECTION
+    # =====================================================
+
+    if not session.get(
+        "admin_logged_in"
+    ):
+
+        return redirect(
+            "/admin/login"
+        )
+
     conn = get_db_connection()
 
-    # -------------------------
+    # =====================================================
     # ADD PROVIDER
-    # -------------------------
+    # =====================================================
 
     if request.method == "POST":
 
         name = request.form.get(
-            "name"
-        )
+            "name",
+            ""
+        ).strip()
 
         mobile = request.form.get(
-            "mobile"
-        )
+            "mobile",
+            ""
+        ).strip()
 
         service = request.form.get(
-            "service"
-        )
+            "service",
+            ""
+        ).strip()
 
         location = request.form.get(
-            "location"
+            "location",
+            ""
+        ).strip()
+
+        # =================================================
+        # PROVIDER LOGIN DETAILS
+        # =================================================
+
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
         )
 
         created_at = datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
         )
+
+        # =================================================
+        # SAVE PROVIDER
+        # =================================================
 
         conn.execute("""
             INSERT INTO providers
@@ -490,23 +788,27 @@ def providers():
                 mobile,
                 service,
                 location,
+                username,
+                password,
                 created_at
             )
 
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             name,
             mobile,
             service,
             location,
+            username,
+            password,
             created_at
         ))
 
         conn.commit()
 
-    # -------------------------
+    # =====================================================
     # GET ALL PROVIDERS
-    # -------------------------
+    # =====================================================
 
     providers = conn.execute("""
         SELECT *
@@ -528,6 +830,13 @@ def providers():
 
 if __name__ == "__main__":
 
-    init_db()
-
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(
+            os.environ.get(
+                "PORT",
+                5000
+            )
+        ),
+        debug=True
+    )
