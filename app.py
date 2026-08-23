@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 
 app = Flask(__name__)
@@ -14,11 +15,6 @@ app.secret_key = os.environ.get(
     "YASHWAY_CHANGE_THIS_SECRET_KEY"
 )
 
-# Render वर database.py कुठेही चुकीच्या folder मध्ये तयार होऊ नये
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "database.db")
-
-# Temporary admin credentials
 ADMIN_USERNAME = os.environ.get(
     "ADMIN_USERNAME",
     "admin"
@@ -29,6 +25,8 @@ ADMIN_PASSWORD = os.environ.get(
     "YASHWAY@123"
 )
 
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
 
 # =========================================================
 # DATABASE CONNECTION
@@ -36,28 +34,36 @@ ADMIN_PASSWORD = os.environ.get(
 
 def get_db_connection():
 
-    conn = sqlite3.connect(DATABASE)
+    if not DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL environment variable is missing."
+        )
 
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
 
     return conn
 
 
 # =========================================================
-# CREATE DATABASE
+# INITIALIZE DATABASE
 # =========================================================
 
 def init_db():
 
     conn = get_db_connection()
 
+    cursor = conn.cursor()
+
     # =====================================================
     # BOOKINGS TABLE
     # =====================================================
 
-    conn.execute("""
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             mobile TEXT NOT NULL,
             service TEXT NOT NULL,
@@ -65,8 +71,8 @@ def init_db():
             date TEXT NOT NULL,
             time TEXT NOT NULL,
             provider TEXT DEFAULT '',
-            cost REAL DEFAULT 0,
-            commission REAL DEFAULT 0,
+            cost DOUBLE PRECISION DEFAULT 0,
+            commission DOUBLE PRECISION DEFAULT 0,
             status TEXT DEFAULT 'Pending',
             created_at TEXT NOT NULL
         )
@@ -76,9 +82,9 @@ def init_db():
     # PROVIDERS TABLE
     # =====================================================
 
-    conn.execute("""
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS providers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             mobile TEXT NOT NULL,
             service TEXT NOT NULL,
@@ -91,54 +97,36 @@ def init_db():
     """)
 
     # =====================================================
-    # PROVIDER TABLE MIGRATION
+    # PROVIDER MIGRATION
     # =====================================================
 
-    columns = conn.execute(
-        "PRAGMA table_info(providers)"
-    ).fetchall()
+    cursor.execute("""
+        ALTER TABLE providers
+        ADD COLUMN IF NOT EXISTS username TEXT
+    """)
 
-    column_names = [
-        column["name"]
-        for column in columns
-    ]
-
-    # Add username if missing
-
-    if "username" not in column_names:
-
-        conn.execute("""
-            ALTER TABLE providers
-            ADD COLUMN username TEXT
-        """)
-
-    # Add password if missing
-
-    if "password" not in column_names:
-
-        conn.execute("""
-            ALTER TABLE providers
-            ADD COLUMN password TEXT
-        """)
+    cursor.execute("""
+        ALTER TABLE providers
+        ADD COLUMN IF NOT EXISTS password TEXT
+    """)
 
     conn.commit()
 
+    cursor.close()
     conn.close()
 
 
 # =========================================================
-# IMPORTANT
-# INITIALIZE DATABASE WHEN APP STARTS
-# =========================================================
-#
-# हे Render/Gunicorn साठी खूप important आहे.
-# Gunicorn app.py ला import करतो त्यामुळे
-# if __name__ == "__main__" मधील init_db() चालत नाही.
-#
-# म्हणून init_db() इथेच चालवतो.
+# INITIALIZE DATABASE ON START
 # =========================================================
 
-init_db()
+try:
+
+    init_db()
+
+except Exception as e:
+
+    print("DATABASE INITIALIZATION ERROR:", e)
 
 
 # =========================================================
@@ -208,7 +196,7 @@ def booking():
         ).strip()
 
         # =================================================
-        # BASIC VALIDATION
+        # VALIDATION
         # =================================================
 
         if not all([
@@ -231,11 +219,13 @@ def booking():
 
         conn = get_db_connection()
 
+        cursor = conn.cursor()
+
         # =================================================
         # SAVE BOOKING
         # =================================================
 
-        cursor = conn.execute("""
+        cursor.execute("""
             INSERT INTO bookings
             (
                 name,
@@ -247,7 +237,17 @@ def booking():
                 created_at
             )
 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+
+            RETURNING id
         """, (
             name,
             mobile,
@@ -258,21 +258,18 @@ def booking():
             created_at
         ))
 
-        booking_id = cursor.lastrowid
+        booking_id = cursor.fetchone()["id"]
 
         conn.commit()
 
+        cursor.close()
         conn.close()
 
         # =================================================
-        # CREATE YASHWAY BOOKING ID
+        # YASHWAY BOOKING ID
         # =================================================
 
         booking_code = f"YWS-{booking_id:04d}"
-
-        # =================================================
-        # SUCCESS PAGE
-        # =================================================
 
         return render_template(
             "booking_success.html",
@@ -318,10 +315,6 @@ def track():
 
         searched = True
 
-        # =================================================
-        # CHECK BOOKING CODE
-        # =================================================
-
         if booking_code.startswith("YWS-"):
 
             try:
@@ -335,16 +328,21 @@ def track():
 
                 conn = get_db_connection()
 
-                booking = conn.execute("""
+                cursor = conn.cursor()
+
+                cursor.execute("""
                     SELECT *
                     FROM bookings
-                    WHERE id = ?
-                    AND mobile = ?
+                    WHERE id = %s
+                    AND mobile = %s
                 """, (
                     booking_id,
                     mobile
-                )).fetchone()
+                ))
 
+                booking = cursor.fetchone()
+
+                cursor.close()
                 conn.close()
 
             except ValueError:
@@ -368,8 +366,6 @@ def track():
 )
 def admin_login():
 
-    # Already logged in
-
     if session.get(
         "admin_logged_in"
     ):
@@ -389,10 +385,6 @@ def admin_login():
             "password",
             ""
         )
-
-        # =================================================
-        # CHECK LOGIN
-        # =================================================
 
         if (
             username == ADMIN_USERNAME
@@ -441,10 +433,6 @@ def admin_logout():
 @app.route("/admin")
 def admin():
 
-    # =====================================================
-    # LOGIN PROTECTION
-    # =====================================================
-
     if not session.get(
         "admin_logged_in"
     ):
@@ -455,80 +443,99 @@ def admin():
 
     conn = get_db_connection()
 
+    cursor = conn.cursor()
+
     # =====================================================
     # ALL BOOKINGS
     # =====================================================
 
-    bookings = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM bookings
         ORDER BY id DESC
-    """).fetchall()
+    """)
+
+    bookings = cursor.fetchall()
 
     # =====================================================
     # ALL PROVIDERS
     # =====================================================
 
-    providers = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM providers
         ORDER BY name ASC
-    """).fetchall()
+    """)
+
+    providers = cursor.fetchall()
 
     # =====================================================
-    # TOTAL BOOKINGS
+    # TOTAL
     # =====================================================
 
-    total = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM bookings
-    """).fetchone()[0]
+    """)
+
+    total = cursor.fetchone()["count"]
 
     # =====================================================
     # PENDING
     # =====================================================
 
-    pending = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM bookings
         WHERE status = 'Pending'
-    """).fetchone()[0]
+    """)
+
+    pending = cursor.fetchone()["count"]
 
     # =====================================================
     # COMPLETED
     # =====================================================
 
-    completed = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM bookings
         WHERE status = 'Completed'
-    """).fetchone()[0]
+    """)
+
+    completed = cursor.fetchone()["count"]
 
     # =====================================================
     # CANCELLED
     # =====================================================
 
-    cancelled = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM bookings
         WHERE status = 'Cancelled'
-    """).fetchone()[0]
+    """)
+
+    cancelled = cursor.fetchone()["count"]
 
     # =====================================================
-    # TOTAL COMMISSION
+    # COMMISSION
     # =====================================================
 
-    total_commission = conn.execute("""
+    cursor.execute("""
         SELECT COALESCE(
             SUM(commission),
             0
-        )
+        ) AS total_commission
 
         FROM bookings
 
         WHERE status = 'Completed'
-    """).fetchone()[0]
+    """)
 
+    total_commission = cursor.fetchone()[
+        "total_commission"
+    ]
+
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -555,10 +562,6 @@ def assign_provider(
     booking_id
 ):
 
-    # =====================================================
-    # LOGIN PROTECTION
-    # =====================================================
-
     if not session.get(
         "admin_logged_in"
     ):
@@ -573,30 +576,24 @@ def assign_provider(
 
     conn = get_db_connection()
 
-    # =====================================================
-    # FIND PROVIDER
-    # =====================================================
+    cursor = conn.cursor()
 
-    provider = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM providers
-        WHERE id = ?
+        WHERE id = %s
     """, (
         provider_id,
-    )).fetchone()
+    ))
 
-    # =====================================================
-    # ASSIGN PROVIDER
-    # =====================================================
+    provider = cursor.fetchone()
 
     if provider:
 
-        conn.execute("""
+        cursor.execute("""
             UPDATE bookings
-
-            SET provider = ?
-
-            WHERE id = ?
+            SET provider = %s
+            WHERE id = %s
         """, (
             provider["name"],
             booking_id
@@ -604,6 +601,7 @@ def assign_provider(
 
         conn.commit()
 
+    cursor.close()
     conn.close()
 
     return redirect(
@@ -622,10 +620,6 @@ def assign_provider(
 def update_booking(
     booking_id
 ):
-
-    # =====================================================
-    # LOGIN PROTECTION
-    # =====================================================
 
     if not session.get(
         "admin_logged_in"
@@ -650,10 +644,6 @@ def update_booking(
         "Pending"
     )
 
-    # =====================================================
-    # CONVERT COST
-    # =====================================================
-
     try:
 
         cost = float(cost)
@@ -664,10 +654,6 @@ def update_booking(
     ):
 
         cost = 0
-
-    # =====================================================
-    # CONVERT COMMISSION
-    # =====================================================
 
     try:
 
@@ -684,15 +670,17 @@ def update_booking(
 
     conn = get_db_connection()
 
-    conn.execute("""
+    cursor = conn.cursor()
+
+    cursor.execute("""
         UPDATE bookings
 
         SET
-            cost = ?,
-            commission = ?,
-            status = ?
+            cost = %s,
+            commission = %s,
+            status = %s
 
-        WHERE id = ?
+        WHERE id = %s
     """, (
         cost,
         commission,
@@ -702,6 +690,7 @@ def update_booking(
 
     conn.commit()
 
+    cursor.close()
     conn.close()
 
     return redirect(
@@ -719,10 +708,6 @@ def update_booking(
 )
 def providers():
 
-    # =====================================================
-    # LOGIN PROTECTION
-    # =====================================================
-
     if not session.get(
         "admin_logged_in"
     ):
@@ -733,9 +718,7 @@ def providers():
 
     conn = get_db_connection()
 
-    # =====================================================
-    # ADD PROVIDER
-    # =====================================================
+    cursor = conn.cursor()
 
     if request.method == "POST":
 
@@ -759,10 +742,6 @@ def providers():
             ""
         ).strip()
 
-        # =================================================
-        # PROVIDER LOGIN DETAILS
-        # =================================================
-
         username = request.form.get(
             "username",
             ""
@@ -777,11 +756,7 @@ def providers():
             "%Y-%m-%d %H:%M:%S"
         )
 
-        # =================================================
-        # SAVE PROVIDER
-        # =================================================
-
-        conn.execute("""
+        cursor.execute("""
             INSERT INTO providers
             (
                 name,
@@ -793,7 +768,15 @@ def providers():
                 created_at
             )
 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
         """, (
             name,
             mobile,
@@ -806,21 +789,20 @@ def providers():
 
         conn.commit()
 
-    # =====================================================
-    # GET ALL PROVIDERS
-    # =====================================================
-
-    providers = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM providers
         ORDER BY id DESC
-    """).fetchall()
+    """)
 
+    providers_list = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return render_template(
         "providers.html",
-        providers=providers
+        providers=providers_list
     )
 
 
@@ -838,5 +820,5 @@ if __name__ == "__main__":
                 5000
             )
         ),
-        debug=True
+        debug=False
     )
