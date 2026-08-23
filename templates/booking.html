@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Book Service | YASHWAY</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        <h1>YASHWAY</h1>
+        <span>Ambad Local Service</span>
+    </div>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/services">Services</a>
+    </nav>
+
+</header>
+
+
+<section class="booking-section">
+
+    <div class="booking-container">
+
+        <div class="section-title">
+
+            <p>YASHWAY BOOKING</p>
+
+            <h2>Service Book करा</h2>
+
+            <span>
+                तुमची माहिती द्या. आम्ही योग्य service provider शी connect करू.
+            </span>
+
+        </div>
+
+
+        <form action="/booking" method="POST" class="booking-form">
+
+            <label for="name">तुमचे नाव</label>
+
+            <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="उदा. Rahul Patil"
+                required
+            >
+
+
+            <label for="mobile">Mobile Number</label>
+
+            <input
+                type="tel"
+                id="mobile"
+                name="mobile"
+                placeholder="10 अंकी Mobile Number"
+                pattern="[0-9]{10}"
+                maxlength="10"
+                required
+            >
+
+
+            <label for="service">Service</label>
+
+            <select id="service" name="service" required>
+
+                <option value="">Service निवडा</option>
+
+                <option value="JCB">🚜 JCB</option>
+                <option value="Tractor">🚜 Tractor</option>
+                <option value="Mechanic">🔧 Mechanic</option>
+                <option value="Electrician">⚡ Electrician</option>
+                <option value="Plumber">🔨 Plumber</option>
+                <option value="Tempo">🚚 Tempo</option>
+                <option value="Labour">👷 Labour</option>
+                <option value="Other">🛠️ Other Service</option>
+
+            </select>
+
+
+            <label for="location">तुमचे Location</label>
+
+            <textarea
+                id="location"
+                name="location"
+                rows="3"
+                placeholder="उदा. Ambad, Jalna Road..."
+                required
+            ></textarea>
+
+
+            <label for="date">Service Date</label>
+
+            <input
+                type="date"
+                id="date"
+                name="date"
+                required
+            >
+
+
+            <label for="time">Service Time</label>
+
+            <input
+                type="time"
+                id="time"
+                name="time"
+                required
+            >
+
+
+            <button type="submit" class="btn primary booking-btn">
+                Confirm Booking
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    <h3>YASHWAY</h3>
+
+    <p>Ambad Local Service</p>
+
+    <p>© 2026 YASHWAY. All Rights Reserved.</p>
+
+</footer>
+
+</body>
+</html>

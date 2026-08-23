@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Services | YASHWAY</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        <h1>YASHWAY</h1>
+        <span>Ambad Local Service</span>
+    </div>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/services">Services</a>
+        <a href="/booking">Book Service</a>
+    </nav>
+
+</header>
+
+
+<section class="services-section">
+
+    <div class="section-title">
+
+        <p>YASHWAY SERVICES</p>
+
+        <h2>तुम्हाला कोणती Service पाहिजे?</h2>
+
+        <p class="service-intro">
+            Ambad मध्ये उपलब्ध local services सहज book करा.
+        </p>
+
+    </div>
+
+
+    <div class="service-grid">
+
+        <div class="service-card">
+            <div class="icon">🚜</div>
+            <h3>JCB</h3>
+            <p>JCB कामासाठी booking करा.</p>
+            <a href="/booking?service=JCB" class="btn primary">Book Now</a>
+        </div>
+
+
+        <div class="service-card">
+            <div class="icon">🚜</div>
+            <h3>Tractor</h3>
+            <p>Tractor आणि शेतीसाठी service.</p>
+            <a href="/booking?service=Tractor" class="btn primary">Book Now</a>
+        </div>
+
+
+        <div class="service-card">
+            <div class="icon">🔧</div>
+            <h3>Mechanic</h3>
+            <p>Bike, car आणि vehicle repair.</p>
+            <a href="/booking?service=Mechanic" class="btn primary">Book Now</a>
+        </div>
+
+
+        <div class="service-card">
+            <div class="icon">⚡</div>
+            <h3>Electrician</h3>
+            <p>घरातील electrical कामासाठी.</p>
+            <a href="/booking?service=Electrician" class="btn primary">Book Now</a>
+        </div>
+
+
+        <div class="service-card">
+            <div class="icon">🔨</div>
+            <h3>Plumber</h3>
+            <p>पाण्याचे pipe आणि plumbing काम.</p>
+            <a href="/booking?service=Plumber" class="btn primary">Book Now</a>
+        </div>
+
+
+        <div class="service-card">
+            <div class="icon">🚚</div>
+            <h3>Tempo</h3>
+            <p>सामान transport करण्यासाठी.</p>
+            <a href="/booking?service=Tempo" class="btn primary">Book Now</a>
+        </div>
+
+
+        <div class="service-card">
+            <div class="icon">👷</div>
+            <h3>Labour</h3>
+            <p>कामासाठी local labour शोधा.</p>
+            <a href="/booking?service=Labour" class="btn primary">Book Now</a>
+        </div>
+
+
+        <div class="service-card">
+            <div class="icon">🛠️</div>
+            <h3>Other Service</h3>
+            <p>तुम्हाला हवी असलेली इतर service.</p>
+            <a href="/booking?service=Other" class="btn primary">Book Now</a>
+        </div>
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    <h3>YASHWAY</h3>
+
+    <p>Ambad Local Service</p>
+
+    <p>© 2026 YASHWAY. All Rights Reserved.</p>
+
+</footer>
+
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

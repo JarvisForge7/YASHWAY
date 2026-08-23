@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Providers | YASHWAY</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+
+        <h1>YASHWAY</h1>
+
+        <span>Provider Management</span>
+
+    </div>
+
+    <nav>
+
+        <a href="/admin">Dashboard</a>
+
+        <a href="/">Website</a>
+
+    </nav>
+
+</header>
+
+
+<section class="admin-section">
+
+<div class="admin-container">
+
+    <div class="admin-title">
+
+        <p>YASHWAY ADMIN</p>
+
+        <h2>Add Service Provider</h2>
+
+    </div>
+
+
+    <form method="POST"
+          class="booking-form">
+
+        <label>Provider Name</label>
+
+        <input
+            type="text"
+            name="name"
+            placeholder="उदा. Amit JCB Services"
+            required
+        >
+
+
+        <label>Mobile</label>
+
+        <input
+            type="tel"
+            name="mobile"
+            placeholder="10 अंकी mobile"
+            pattern="[0-9]{10}"
+            maxlength="10"
+            required
+        >
+
+
+        <label>Service</label>
+
+        <select name="service" required>
+
+            <option value="">Service निवडा</option>
+
+            <option value="JCB">JCB</option>
+
+            <option value="Tractor">Tractor</option>
+
+            <option value="Mechanic">Mechanic</option>
+
+            <option value="Electrician">Electrician</option>
+
+            <option value="Plumber">Plumber</option>
+
+            <option value="Tempo">Tempo</option>
+
+            <option value="Labour">Labour</option>
+
+        </select>
+
+
+        <label>Location</label>
+
+        <input
+            type="text"
+            name="location"
+            placeholder="उदा. Ambad"
+            required
+        >
+
+
+        <button
+            type="submit"
+            class="btn primary booking-btn">
+
+            Add Provider
+
+        </button>
+
+    </form>
+
+
+    <div class="booking-list">
+
+        <h2>Registered Providers</h2>
+
+
+        {% for provider in providers %}
+
+        <div class="admin-booking-card">
+
+            <div class="booking-header">
+
+                <h3>
+                    {{ provider["name"] }}
+                </h3>
+
+                <span class="status">
+                    {{ provider["status"] }}
+                </span>
+
+            </div>
+
+
+            <div class="booking-details">
+
+                <p>
+                    <strong>Mobile:</strong>
+                    {{ provider["mobile"] }}
+                </p>
+
+                <p>
+                    <strong>Service:</strong>
+                    {{ provider["service"] }}
+                </p>
+
+                <p>
+                    <strong>Location:</strong>
+                    {{ provider["location"] }}
+                </p>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+</section>
+
+</body>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Booking Confirmed | YASHWAY</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+
+<header class="navbar">
+
+    <div class="logo">
+
+        <h1>YASHWAY</h1>
+
+        <span>Ambad Local Service</span>
+
+    </div>
+
+</header>
+
+
+
+<section class="booking-success">
+
+    <div class="success-card">
+
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+
+        <h1>
+            Booking Confirmed!
+        </h1>
+
+
+        <p>
+            तुमची YASHWAY booking successfully received झाली आहे.
+        </p>
+
+
+        <div class="booking-code">
+
+            <span>
+                YASHWAY Booking ID
+            </span>
+
+            <strong>
+                #{{ booking_code }}
+            </strong>
+
+        </div>
+
+
+        <div class="success-details">
+
+            <p>
+                <strong>Customer:</strong>
+                {{ name }}
+            </p>
+
+            <p>
+                <strong>Service:</strong>
+                {{ service }}
+            </p>
+
+            <p>
+                <strong>Location:</strong>
+                {{ location }}
+            </p>
+
+            <p>
+                <strong>Date:</strong>
+                {{ date }}
+            </p>
+
+            <p>
+                <strong>Time:</strong>
+                {{ time }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                🟡 Pending
+            </p>
+
+        </div>
+
+
+        <div class="success-actions">
+
+            <a href="/track" class="btn primary">
+                Track My Booking
+            </a>
+
+            <a href="/" class="btn secondary">
+                Back to Home
+            </a>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    <h3>YASHWAY</h3>
+
+    <p>
+        Ambad Local Service
+    </p>
+
+    <p>
+        © 2026 YASHWAY
+    </p>
+
+</footer>
+
+
+</body>
+
+</html>

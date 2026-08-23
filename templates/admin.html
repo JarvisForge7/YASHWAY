@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>YASHWAY Admin</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<header class="navbar">
+
+    <div class="logo">
+
+        <h1>YASHWAY</h1>
+
+        <span>Admin Dashboard</span>
+
+    </div>
+
+
+    <nav>
+
+        <a href="/">Website</a>
+
+        <a href="/services">Services</a>
+
+        <a href="/booking">Booking</a>
+
+        <a href="/admin/providers">
+            Providers
+        </a>
+
+    </nav>
+
+</header>
+
+
+
+<section class="admin-section">
+
+<div class="admin-container">
+
+
+    <!-- TITLE -->
+
+    <div class="admin-title">
+
+        <p>YASHWAY ADMIN</p>
+
+        <h2>Booking Dashboard</h2>
+
+    </div>
+
+
+
+    <!-- STATS -->
+
+    <div class="admin-stats">
+
+
+        <div class="stat-card">
+
+            <h3>{{ total }}</h3>
+
+            <p>Total Bookings</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h3>{{ pending }}</h3>
+
+            <p>Pending</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h3>{{ completed }}</h3>
+
+            <p>Completed</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h3>{{ cancelled }}</h3>
+
+            <p>Cancelled</p>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- COMMISSION -->
+
+    <div class="commission-card">
+
+        <p>Total YASHWAY Commission</p>
+
+        <h2>₹{{ total_commission }}</h2>
+
+        <span>
+            Completed bookings मधून
+        </span>
+
+    </div>
+
+
+
+    <!-- BOOKINGS -->
+
+    <div class="booking-list">
+
+        <h2>All Bookings</h2>
+
+
+        {% if bookings %}
+
+
+        {% for booking in bookings %}
+
+
+        <div class="admin-booking-card">
+
+
+            <!-- HEADER -->
+
+            <div class="booking-header">
+
+                <h3>
+                    Booking #{{ booking["id"] }}
+                </h3>
+
+
+                <span class="status">
+                    {{ booking["status"] }}
+                </span>
+
+            </div>
+
+
+
+            <!-- CUSTOMER DETAILS -->
+
+            <div class="booking-details">
+
+
+                <p>
+
+                    <strong>Customer:</strong>
+
+                    {{ booking["name"] }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>Mobile:</strong>
+
+                    {{ booking["mobile"] }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>Service:</strong>
+
+                    {{ booking["service"] }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>Location:</strong>
+
+                    {{ booking["location"] }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>Date:</strong>
+
+                    {{ booking["date"] }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>Time:</strong>
+
+                    {{ booking["time"] }}
+
+                </p>
+
+
+            </div>
+
+
+
+            <!-- PROVIDER -->
+
+            <div class="provider-assign">
+
+                <h4>
+                    Service Provider
+                </h4>
+
+
+                {% if booking["provider"] %}
+
+
+                    <p class="assigned-provider">
+
+                        ✅ Assigned:
+
+                        <strong>
+                            {{ booking["provider"] }}
+                        </strong>
+
+                    </p>
+
+
+                {% else %}
+
+
+                    <form
+                        action="/admin/assign-provider/{{ booking['id'] }}"
+                        method="POST"
+                        class="assign-form"
+                    >
+
+                        <select
+                            name="provider_id"
+                            required
+                        >
+
+                            <option value="">
+                                Provider निवडा
+                            </option>
+
+
+                            {% for provider in providers %}
+
+                                {% if provider["service"] == booking["service"] %}
+
+                                    <option
+                                        value="{{ provider['id'] }}"
+                                    >
+
+                                        {{ provider["name"] }}
+                                        —
+                                        {{ provider["location"] }}
+
+                                    </option>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </select>
+
+
+                        <button
+                            type="submit"
+                            class="btn primary"
+                        >
+
+                            Assign Provider
+
+                        </button>
+
+                    </form>
+
+
+                {% endif %}
+
+            </div>
+
+
+
+            <!-- COST + COMMISSION + STATUS -->
+
+            <div class="booking-management">
+
+                <h4>
+                    Booking Management
+                </h4>
+
+
+                <form
+                    action="/admin/update-booking/{{ booking['id'] }}"
+                    method="POST"
+                    class="management-form"
+                >
+
+
+                    <div class="management-field">
+
+                        <label>
+                            Service Cost
+                        </label>
+
+                        <input
+                            type="number"
+                            name="cost"
+                            value="{{ booking['cost'] }}"
+                            min="0"
+                            step="0.01"
+                            placeholder="₹"
+                        >
+
+                    </div>
+
+
+
+                    <div class="management-field">
+
+                        <label>
+                            YASHWAY Commission
+                        </label>
+
+                        <input
+                            type="number"
+                            name="commission"
+                            value="{{ booking['commission'] }}"
+                            min="0"
+                            step="0.01"
+                            placeholder="₹"
+                        >
+
+                    </div>
+
+
+
+                    <div class="management-field">
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select name="status">
+
+                            <option
+                                value="Pending"
+                                {% if booking["status"] == "Pending" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Pending
+                            </option>
+
+
+                            <option
+                                value="Accepted"
+                                {% if booking["status"] == "Accepted" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Accepted
+                            </option>
+
+
+                            <option
+                                value="Completed"
+                                {% if booking["status"] == "Completed" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Completed
+                            </option>
+
+
+                            <option
+                                value="Cancelled"
+                                {% if booking["status"] == "Cancelled" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <button
+                        type="submit"
+                        class="btn primary save-btn"
+                    >
+
+                        Save Changes
+
+                    </button>
+
+
+                </form>
+
+            </div>
+
+
+
+            <!-- CURRENT MONEY -->
+
+            <div class="booking-finance">
+
+
+                <div>
+
+                    <strong>
+                        Service Cost
+                    </strong>
+
+                    <p>
+                        ₹{{ booking["cost"] }}
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        YASHWAY Commission
+                    </strong>
+
+                    <p>
+                        ₹{{ booking["commission"] }}
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        {% endfor %}
+
+
+        {% else %}
+
+
+        <div class="no-booking">
+
+            <h3>
+                अजून कोणतीही Booking नाही.
+            </h3>
+
+            <p>
+                Customer booking केल्यावर
+                ती इथे दिसेल.
+            </p>
+
+        </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+</div>
+
+</section>
+
+
+
+<footer>
+
+    <h3>YASHWAY</h3>
+
+    <p>
+        Ambad Local Service
+    </p>
+
+    <p>
+        © 2026 YASHWAY
+    </p>
+
+</footer>
+
+
+</body>
+
+</html>
