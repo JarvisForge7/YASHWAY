@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html lang="mr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Provider Dashboard | YASHWAY</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+
+<header class="navbar">
+
+    <div class="logo">
+
+        <h1>YASHWAY</h1>
+
+        <span>Provider Panel</span>
+
+    </div>
+
+
+    <nav>
+
+        <a href="/">Website</a>
+
+        <a href="/provider/logout">
+            Logout
+        </a>
+
+    </nav>
+
+</header>
+
+
+
+<section class="admin-section">
+
+<div class="admin-container">
+
+
+    <div class="admin-title">
+
+        <p>PROVIDER PANEL</p>
+
+        <h2>
+            Welcome, {{ provider["name"] }}
+        </h2>
+
+        <p>
+            {{ provider["service"] }} |
+            {{ provider["location"] }}
+        </p>
+
+    </div>
+
+
+
+    <div class="booking-list">
+
+        <h2>
+            My Assigned Bookings
+        </h2>
+
+
+        {% if bookings %}
+
+
+            {% for booking in bookings %}
+
+
+            <div class="admin-booking-card">
+
+
+                <div class="booking-header">
+
+                    <h3>
+
+                        Booking #YWS-{{
+                            "%04d"|format(
+                                booking["id"]
+                            )
+                        }}
+
+                    </h3>
+
+
+                    <span class="status">
+
+                        {{ booking["status"] }}
+
+                    </span>
+
+                </div>
+
+
+
+                <div class="booking-details">
+
+
+                    <p>
+
+                        <strong>
+                            Customer:
+                        </strong>
+
+                        {{ booking["name"] }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Mobile:
+                        </strong>
+
+                        {{ booking["mobile"] }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Service:
+                        </strong>
+
+                        {{ booking["service"] }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Location:
+                        </strong>
+
+                        {{ booking["location"] }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Date:
+                        </strong>
+
+                        {{ booking["date"] }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Time:
+                        </strong>
+
+                        {{ booking["time"] }}
+
+                    </p>
+
+
+                </div>
+
+
+
+                <!-- ACTIONS -->
+
+
+                <div class="provider-assign">
+
+
+                    {% if booking["status"] == "Pending" %}
+
+
+                    <form
+                        method="POST"
+                        action="/provider/accept/{{ booking['id'] }}"
+                    >
+
+                        <button
+                            type="submit"
+                            class="btn primary"
+                        >
+
+                            Accept Booking
+
+                        </button>
+
+                    </form>
+
+
+                    {% elif booking["status"] == "Accepted" %}
+
+
+                    <p class="assigned-provider">
+
+                        🟢 Booking Accepted
+
+                    </p>
+
+
+                    <form
+                        method="POST"
+                        action="/provider/complete/{{ booking['id'] }}"
+                        style="margin-top:12px;"
+                    >
+
+                        <button
+                            type="submit"
+                            class="btn primary"
+                        >
+
+                            Mark as Completed
+
+                        </button>
+
+                    </form>
+
+
+                    {% elif booking["status"] == "Completed" %}
+
+
+                    <p class="assigned-provider">
+
+                        🟢 Service Completed
+
+                    </p>
+
+
+                    {% elif booking["status"] == "Cancelled" %}
+
+
+                    <p>
+
+                        🔴 Booking Cancelled
+
+                    </p>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+            </div>
+
+
+            {% endfor %}
+
+
+        {% else %}
+
+
+            <div class="no-booking">
+
+                <h3>
+                    No bookings yet
+                </h3>
+
+                <p>
+                    तुम्हाला assign झालेली booking इथे दिसेल.
+                </p>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+</div>
+
+</section>
+
+
+</body>
+
+</html>

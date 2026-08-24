@@ -836,7 +836,301 @@ def delete_provider(provider_id):
     return redirect(
         "/admin/providers"
     )
+# =========================================================
+# PROVIDER LOGIN
+# =========================================================
 
+@app.route(
+    "/provider/login",
+    methods=["GET", "POST"]
+)
+def provider_login():
+
+    # Already logged in
+    if session.get("provider_logged_in"):
+
+        return redirect("/provider/dashboard")
+
+    if request.method == "POST":
+
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        if not username or not password:
+
+            return render_template(
+                "provider_login.html",
+                error="Username आणि Password भरा."
+            )
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT *
+            FROM providers
+            WHERE username = %s
+            AND password = %s
+        """, (
+            username,
+            password
+        ))
+
+        provider = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if provider:
+
+            session["provider_logged_in"] = True
+
+            session["provider_id"] = provider["id"]
+
+            session["provider_name"] = provider["name"]
+
+            return redirect(
+                "/provider/dashboard"
+            )
+
+        return render_template(
+            "provider_login.html",
+            error="Username किंवा Password चुकीचा आहे."
+        )
+
+    return render_template(
+        "provider_login.html"
+    )
+
+
+# =========================================================
+# PROVIDER DASHBOARD
+# =========================================================
+
+@app.route("/provider/dashboard")
+def provider_dashboard():
+
+    # Login protection
+
+    if not session.get(
+        "provider_logged_in"
+    ):
+
+        return redirect(
+            "/provider/login"
+        )
+
+    provider_id = session.get(
+        "provider_id"
+    )
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # =====================================================
+    # GET PROVIDER
+    # =====================================================
+
+    cursor.execute("""
+        SELECT *
+        FROM providers
+        WHERE id = %s
+    """, (
+        provider_id,
+    ))
+
+    provider = cursor.fetchone()
+
+    # Provider deleted असल्यास logout
+
+    if not provider:
+
+        cursor.close()
+        conn.close()
+
+        session.clear()
+
+        return redirect(
+            "/provider/login"
+        )
+
+    # =====================================================
+    # GET ASSIGNED BOOKINGS
+    # =====================================================
+
+    cursor.execute("""
+        SELECT *
+        FROM bookings
+        WHERE provider = %s
+        ORDER BY id DESC
+    """, (
+        provider["name"],
+    ))
+
+    bookings = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "provider_dashboard.html",
+        provider=provider,
+        bookings=bookings
+    )
+
+
+# =========================================================
+# PROVIDER ACCEPT BOOKING
+# =========================================================
+
+@app.route(
+    "/provider/accept/<int:booking_id>",
+    methods=["POST"]
+)
+def provider_accept_booking(booking_id):
+
+    if not session.get(
+        "provider_logged_in"
+    ):
+
+        return redirect(
+            "/provider/login"
+        )
+
+    provider_id = session.get(
+        "provider_id"
+    )
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Provider चं नाव शोधा
+
+    cursor.execute("""
+        SELECT name
+        FROM providers
+        WHERE id = %s
+    """, (
+        provider_id,
+    ))
+
+    provider = cursor.fetchone()
+
+    if provider:
+
+        # फक्त स्वतःला assign झालेली booking update करायची
+
+        cursor.execute("""
+            UPDATE bookings
+            SET status = 'Accepted'
+            WHERE id = %s
+            AND provider = %s
+            AND status = 'Pending'
+        """, (
+            booking_id,
+            provider["name"]
+        ))
+
+        conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        "/provider/dashboard"
+    )
+
+
+# =========================================================
+# PROVIDER COMPLETE BOOKING
+# =========================================================
+
+@app.route(
+    "/provider/complete/<int:booking_id>",
+    methods=["POST"]
+)
+def provider_complete_booking(booking_id):
+
+    if not session.get(
+        "provider_logged_in"
+    ):
+
+        return redirect(
+            "/provider/login"
+        )
+
+    provider_id = session.get(
+        "provider_id"
+    )
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT name
+        FROM providers
+        WHERE id = %s
+    """, (
+        provider_id,
+    ))
+
+    provider = cursor.fetchone()
+
+    if provider:
+
+        cursor.execute("""
+            UPDATE bookings
+            SET status = 'Completed'
+            WHERE id = %s
+            AND provider = %s
+            AND status = 'Accepted'
+        """, (
+            booking_id,
+            provider["name"]
+        ))
+
+        conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        "/provider/dashboard"
+    )
+
+
+# =========================================================
+# PROVIDER LOGOUT
+# =========================================================
+
+@app.route("/provider/logout")
+def provider_logout():
+
+    session.pop(
+        "provider_logged_in",
+        None
+    )
+
+    session.pop(
+        "provider_id",
+        None
+    )
+
+    session.pop(
+        "provider_name",
+        None
+    )
+
+    return redirect(
+        "/provider/login"
+    )
 
 # =========================================================
 # START SERVER

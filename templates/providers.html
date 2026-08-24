@@ -116,6 +116,55 @@
         >
 
 
+        <!-- ========================================= -->
+        <!-- PROVIDER LOGIN -->
+        <!-- ========================================= -->
+
+        <div style="
+            margin-top:25px;
+            padding:20px;
+            background:#f8fafc;
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+        ">
+
+            <h3 style="margin-bottom:8px;">
+                🔐 Provider Login
+            </h3>
+
+            <p style="
+                color:#64748b;
+                font-size:14px;
+                margin-bottom:15px;
+            ">
+                Provider ला login करण्यासाठी username आणि password द्या.
+            </p>
+
+
+            <label>Username</label>
+
+            <input
+                type="text"
+                name="username"
+                placeholder="उदा. amitjcb"
+                autocomplete="off"
+                required
+            >
+
+
+            <label>Password</label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Provider password"
+                autocomplete="new-password"
+                required
+            >
+
+        </div>
+
+
         <button
             type="submit"
             class="btn primary booking-btn">
@@ -172,6 +221,40 @@
                         {{ provider["location"] }}
                     </p>
 
+                    <p>
+                        <strong>Username:</strong>
+                        {{ provider["username"] or "Not set" }}
+                    </p>
+
+                </div>
+
+
+                <!-- ================================= -->
+                <!-- PROVIDER LOGIN LINK -->
+                <!-- ================================= -->
+
+                <div style="
+                    margin-top:18px;
+                    padding:12px;
+                    background:#eff6ff;
+                    border-radius:8px;
+                ">
+
+                    <strong>
+                        🔐 Provider Login:
+                    </strong>
+
+                    <a
+                        href="/provider/login"
+                        style="
+                            color:#2563eb;
+                            font-weight:bold;
+                            margin-left:8px;
+                        "
+                    >
+                        Open Login
+                    </a>
+
                 </div>
 
 
@@ -188,7 +271,13 @@
                     <button
                         type="submit"
                         class="btn"
-                        style="background:#dc2626;color:white;margin-top:15px;"
+                        style="
+                            background:#dc2626;
+                            color:white;
+                            margin-top:15px;
+                            border:none;
+                            cursor:pointer;
+                        "
                     >
 
                         🗑️ Delete Provider
@@ -203,9 +292,13 @@
 
         {% else %}
 
-            <p>
-                अजून कोणताही provider registered नाही.
-            </p>
+            <div class="no-booking">
+
+                <p>
+                    अजून कोणताही provider registered नाही.
+                </p>
+
+            </div>
 
         {% endif %}
 
