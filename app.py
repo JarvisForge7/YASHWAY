@@ -39,26 +39,23 @@ def get_db_connection():
             "DATABASE_URL environment variable is missing."
         )
 
-    conn = psycopg2.connect(
+    return psycopg2.connect(
         DATABASE_URL,
         cursor_factory=RealDictCursor
     )
 
-    return conn
-
 
 # =========================================================
-# INITIALIZE DATABASE
+# DATABASE INITIALIZATION
 # =========================================================
 
 def init_db():
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     # =====================================================
-    # BOOKINGS TABLE
+    # BOOKINGS
     # =====================================================
 
     cursor.execute("""
@@ -79,7 +76,7 @@ def init_db():
     """)
 
     # =====================================================
-    # PROVIDERS TABLE
+    # PROVIDERS
     # =====================================================
 
     cursor.execute("""
@@ -110,6 +107,11 @@ def init_db():
         ADD COLUMN IF NOT EXISTS password TEXT
     """)
 
+    cursor.execute("""
+        ALTER TABLE providers
+        ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Available'
+    """)
+
     conn.commit()
 
     cursor.close()
@@ -117,12 +119,14 @@ def init_db():
 
 
 # =========================================================
-# INITIALIZE DATABASE ON START
+# INITIALIZE DATABASE
 # =========================================================
 
 try:
 
     init_db()
+
+    print("DATABASE INITIALIZED SUCCESSFULLY")
 
 except Exception as e:
 
@@ -136,9 +140,7 @@ except Exception as e:
 @app.route("/")
 def home():
 
-    return render_template(
-        "index.html"
-    )
+    return render_template("index.html")
 
 
 # =========================================================
@@ -148,19 +150,14 @@ def home():
 @app.route("/services")
 def services():
 
-    return render_template(
-        "services.html"
-    )
+    return render_template("services.html")
 
 
 # =========================================================
 # CUSTOMER BOOKING
 # =========================================================
 
-@app.route(
-    "/booking",
-    methods=["GET", "POST"]
-)
+@app.route("/booking", methods=["GET", "POST"])
 def booking():
 
     if request.method == "POST":
@@ -218,7 +215,6 @@ def booking():
         )
 
         conn = get_db_connection()
-
         cursor = conn.cursor()
 
         # =================================================
@@ -236,7 +232,6 @@ def booking():
                 time,
                 created_at
             )
-
             VALUES (
                 %s,
                 %s,
@@ -246,7 +241,6 @@ def booking():
                 %s,
                 %s
             )
-
             RETURNING id
         """, (
             name,
@@ -264,10 +258,6 @@ def booking():
 
         cursor.close()
         conn.close()
-
-        # =================================================
-        # YASHWAY BOOKING ID
-        # =================================================
 
         booking_code = f"YWS-{booking_id:04d}"
 
@@ -291,14 +281,10 @@ def booking():
 # TRACK BOOKING
 # =========================================================
 
-@app.route(
-    "/track",
-    methods=["GET", "POST"]
-)
+@app.route("/track", methods=["GET", "POST"])
 def track():
 
     booking = None
-
     searched = False
 
     if request.method == "POST":
@@ -327,7 +313,6 @@ def track():
                 )
 
                 conn = get_db_connection()
-
                 cursor = conn.cursor()
 
                 cursor.execute("""
@@ -360,19 +345,12 @@ def track():
 # ADMIN LOGIN
 # =========================================================
 
-@app.route(
-    "/admin/login",
-    methods=["GET", "POST"]
-)
+@app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
 
-    if session.get(
-        "admin_logged_in"
-    ):
+    if session.get("admin_logged_in"):
 
-        return redirect(
-            "/admin"
-        )
+        return redirect("/admin")
 
     if request.method == "POST":
 
@@ -391,13 +369,9 @@ def admin_login():
             and password == ADMIN_PASSWORD
         ):
 
-            session[
-                "admin_logged_in"
-            ] = True
+            session["admin_logged_in"] = True
 
-            return redirect(
-                "/admin"
-            )
+            return redirect("/admin")
 
         return render_template(
             "admin_login.html",
@@ -442,7 +416,6 @@ def admin():
         )
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     # =====================================================
@@ -474,50 +447,50 @@ def admin():
     # =====================================================
 
     cursor.execute("""
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS total
         FROM bookings
     """)
 
-    total = cursor.fetchone()["count"]
+    total = cursor.fetchone()["total"]
 
     # =====================================================
     # PENDING
     # =====================================================
 
     cursor.execute("""
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS pending
         FROM bookings
         WHERE status = 'Pending'
     """)
 
-    pending = cursor.fetchone()["count"]
+    pending = cursor.fetchone()["pending"]
 
     # =====================================================
     # COMPLETED
     # =====================================================
 
     cursor.execute("""
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS completed
         FROM bookings
         WHERE status = 'Completed'
     """)
 
-    completed = cursor.fetchone()["count"]
+    completed = cursor.fetchone()["completed"]
 
     # =====================================================
     # CANCELLED
     # =====================================================
 
     cursor.execute("""
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS cancelled
         FROM bookings
         WHERE status = 'Cancelled'
     """)
 
-    cancelled = cursor.fetchone()["count"]
+    cancelled = cursor.fetchone()["cancelled"]
 
     # =====================================================
-    # COMMISSION
+    # TOTAL COMMISSION
     # =====================================================
 
     cursor.execute("""
@@ -525,9 +498,7 @@ def admin():
             SUM(commission),
             0
         ) AS total_commission
-
         FROM bookings
-
         WHERE status = 'Completed'
     """)
 
@@ -558,9 +529,7 @@ def admin():
     "/admin/assign-provider/<int:booking_id>",
     methods=["POST"]
 )
-def assign_provider(
-    booking_id
-):
+def assign_provider(booking_id):
 
     if not session.get(
         "admin_logged_in"
@@ -574,8 +543,11 @@ def assign_provider(
         "provider_id"
     )
 
-    conn = get_db_connection()
+    if not provider_id:
 
+        return redirect("/admin")
+
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -617,9 +589,7 @@ def assign_provider(
     "/admin/update-booking/<int:booking_id>",
     methods=["POST"]
 )
-def update_booking(
-    booking_id
-):
+def update_booking(booking_id):
 
     if not session.get(
         "admin_logged_in"
@@ -669,17 +639,14 @@ def update_booking(
         commission = 0
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE bookings
-
         SET
             cost = %s,
             commission = %s,
             status = %s
-
         WHERE id = %s
     """, (
         cost,
@@ -717,8 +684,11 @@ def providers():
         )
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
+
+    # =====================================================
+    # ADD PROVIDER
+    # =====================================================
 
     if request.method == "POST":
 
@@ -752,6 +722,24 @@ def providers():
             ""
         )
 
+        # =================================================
+        # VALIDATION
+        # =================================================
+
+        if not all([
+            name,
+            mobile,
+            service,
+            location
+        ]):
+
+            cursor.close()
+            conn.close()
+
+            return redirect(
+                "/admin/providers"
+            )
+
         created_at = datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
         )
@@ -765,10 +753,11 @@ def providers():
                 location,
                 username,
                 password,
+                status,
                 created_at
             )
-
             VALUES (
+                %s,
                 %s,
                 %s,
                 %s,
@@ -784,10 +773,15 @@ def providers():
             location,
             username,
             password,
+            "Available",
             created_at
         ))
 
         conn.commit()
+
+    # =====================================================
+    # GET PROVIDERS
+    # =====================================================
 
     cursor.execute("""
         SELECT *
@@ -804,7 +798,8 @@ def providers():
         "providers.html",
         providers=providers_list
     )
-```python
+
+
 # =========================================================
 # DELETE PROVIDER
 # =========================================================
@@ -815,26 +810,32 @@ def providers():
 )
 def delete_provider(provider_id):
 
-    # Login protection
-    if not session.get("admin_logged_in"):
-        return redirect("/admin/login")
+    if not session.get(
+        "admin_logged_in"
+    ):
+
+        return redirect(
+            "/admin/login"
+        )
 
     conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # Delete provider
-    conn.execute("""
+    cursor.execute("""
         DELETE FROM providers
-        WHERE id = ?
+        WHERE id = %s
     """, (
         provider_id,
     ))
 
     conn.commit()
+
+    cursor.close()
     conn.close()
 
-    return redirect("/admin/providers")
-```
-
+    return redirect(
+        "/admin/providers"
+    )
 
 
 # =========================================================
