@@ -804,6 +804,37 @@ def providers():
         "providers.html",
         providers=providers_list
     )
+```python
+# =========================================================
+# DELETE PROVIDER
+# =========================================================
+
+@app.route(
+    "/admin/delete-provider/<int:provider_id>",
+    methods=["POST"]
+)
+def delete_provider(provider_id):
+
+    # Login protection
+    if not session.get("admin_logged_in"):
+        return redirect("/admin/login")
+
+    conn = get_db_connection()
+
+    # Delete provider
+    conn.execute("""
+        DELETE FROM providers
+        WHERE id = ?
+    """, (
+        provider_id,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin/providers")
+```
+
 
 
 # =========================================================

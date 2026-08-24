@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="mr">
 
@@ -33,6 +34,8 @@
 
         <a href="/">Website</a>
 
+        <a href="/admin/logout">Logout</a>
+
     </nav>
 
 </header>
@@ -50,6 +53,10 @@
 
     </div>
 
+
+    <!-- ============================================= -->
+    <!-- ADD PROVIDER -->
+    <!-- ============================================= -->
 
     <form method="POST"
           class="booking-form">
@@ -113,57 +120,94 @@
             type="submit"
             class="btn primary booking-btn">
 
-            Add Provider
+            ➕ Add Provider
 
         </button>
 
     </form>
 
 
+    <!-- ============================================= -->
+    <!-- REGISTERED PROVIDERS -->
+    <!-- ============================================= -->
+
     <div class="booking-list">
 
         <h2>Registered Providers</h2>
 
 
-        {% for provider in providers %}
+        {% if providers %}
 
-        <div class="admin-booking-card">
+            {% for provider in providers %}
 
-            <div class="booking-header">
+            <div class="admin-booking-card">
 
-                <h3>
-                    {{ provider["name"] }}
-                </h3>
+                <div class="booking-header">
 
-                <span class="status">
-                    {{ provider["status"] }}
-                </span>
+                    <h3>
+                        {{ provider["name"] }}
+                    </h3>
+
+                    <span class="status">
+                        {{ provider["status"] }}
+                    </span>
+
+                </div>
+
+
+                <div class="booking-details">
+
+                    <p>
+                        <strong>Mobile:</strong>
+                        {{ provider["mobile"] }}
+                    </p>
+
+                    <p>
+                        <strong>Service:</strong>
+                        {{ provider["service"] }}
+                    </p>
+
+                    <p>
+                        <strong>Location:</strong>
+                        {{ provider["location"] }}
+                    </p>
+
+                </div>
+
+
+                <!-- ================================= -->
+                <!-- DELETE PROVIDER -->
+                <!-- ================================= -->
+
+                <form
+                    method="POST"
+                    action="/admin/delete-provider/{{ provider['id'] }}"
+                    onsubmit="return confirm('हा provider कायमचा delete करायचा आहे का?');"
+                >
+
+                    <button
+                        type="submit"
+                        class="btn"
+                        style="background:#dc2626;color:white;margin-top:15px;"
+                    >
+
+                        🗑️ Delete Provider
+
+                    </button>
+
+                </form>
 
             </div>
 
+            {% endfor %}
 
-            <div class="booking-details">
+        {% else %}
 
-                <p>
-                    <strong>Mobile:</strong>
-                    {{ provider["mobile"] }}
-                </p>
+            <p>
+                अजून कोणताही provider registered नाही.
+            </p>
 
-                <p>
-                    <strong>Service:</strong>
-                    {{ provider["service"] }}
-                </p>
-
-                <p>
-                    <strong>Location:</strong>
-                    {{ provider["location"] }}
-                </p>
-
-            </div>
-
-        </div>
-
-        {% endfor %}
+        {% endif %}
 
     </div>
 
@@ -174,3 +218,4 @@
 </body>
 
 </html>
+```
