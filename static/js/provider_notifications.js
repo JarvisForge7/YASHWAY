@@ -33,7 +33,10 @@ function prepareAudio() {
 
     } catch (error) {
 
-        console.log("Audio context error:", error);
+        console.log(
+            "Audio context error:",
+            error
+        );
 
     }
 
@@ -47,14 +50,20 @@ function prepareAudio() {
 function updateNotificationStatus() {
 
     const status =
-        document.getElementById("notification-status");
+        document.getElementById(
+            "notification-status"
+        );
 
     const button =
-        document.getElementById("enable-notifications");
+        document.getElementById(
+            "enable-notifications"
+        );
 
 
     if (!status || !button) {
+
         return;
+
     }
 
 
@@ -70,7 +79,10 @@ function updateNotificationStatus() {
     }
 
 
-    if (Notification.permission === "granted") {
+    if (
+        Notification.permission ===
+        "granted"
+    ) {
 
         status.textContent =
             "✅ Notifications चालू आहेत.";
@@ -82,10 +94,16 @@ function updateNotificationStatus() {
 
     }
 
-    else if (Notification.permission === "denied") {
+    else if (
+        Notification.permission ===
+        "denied"
+    ) {
 
         status.textContent =
             "❌ Notifications Block आहेत. Browser settings मधून Allow करा.";
+
+        button.textContent =
+            "🔔 Enable Notifications";
 
         button.disabled = false;
 
@@ -95,6 +113,9 @@ function updateNotificationStatus() {
 
         status.textContent =
             "⚠️ Notifications अजून Enable केलेले नाहीत.";
+
+        button.textContent =
+            "🔔 Enable Notifications";
 
         button.disabled = false;
 
@@ -110,10 +131,14 @@ function updateNotificationStatus() {
 async function enableNotifications() {
 
     const status =
-        document.getElementById("notification-status");
+        document.getElementById(
+            "notification-status"
+        );
 
     const button =
-        document.getElementById("enable-notifications");
+        document.getElementById(
+            "enable-notifications"
+        );
 
 
     prepareAudio();
@@ -139,7 +164,15 @@ async function enableNotifications() {
             Notification.permission;
 
 
-        if (permission !== "granted") {
+        /*
+         Browser ने आधी permission दिलेली नसेल
+         तर permission मागा.
+        */
+
+        if (
+            permission !==
+            "granted"
+        ) {
 
             permission =
                 await Notification.requestPermission();
@@ -147,7 +180,14 @@ async function enableNotifications() {
         }
 
 
-        if (permission === "granted") {
+        /*
+         Permission GRANTED
+        */
+
+        if (
+            permission ===
+            "granted"
+        ) {
 
             updateNotificationStatus();
 
@@ -156,13 +196,37 @@ async function enableNotifications() {
              Test notification
             */
 
-            new Notification(
-                "YASHWAY 🔔",
-                {
-                    body:
-                        "Booking notifications चालू झाले आहेत."
-                }
-            );
+            try {
+
+                const notification =
+                    new Notification(
+                        "YASHWAY 🔔",
+                        {
+                            body:
+                                "Booking notifications चालू झाले आहेत.",
+                            tag:
+                                "yashway-test-notification"
+                        }
+                    );
+
+
+                notification.onclick =
+                    function () {
+
+                        window.focus();
+
+                        notification.close();
+
+                    };
+
+            } catch (error) {
+
+                console.log(
+                    "Test notification error:",
+                    error
+                );
+
+            }
 
 
             /*
@@ -176,11 +240,19 @@ async function enableNotifications() {
              Immediately check bookings
             */
 
-            checkProviderBookings();
+            await checkProviderBookings();
 
         }
 
-        else if (permission === "denied") {
+
+        /*
+         Permission DENIED
+        */
+
+        else if (
+            permission ===
+            "denied"
+        ) {
 
             if (status) {
 
@@ -190,6 +262,11 @@ async function enableNotifications() {
             }
 
         }
+
+
+        /*
+         Permission DEFAULT
+        */
 
         else {
 
@@ -233,13 +310,22 @@ function showProviderNotification(
     message
 ) {
 
-    if (!("Notification" in window)) {
+    if (
+        !("Notification" in window)
+    ) {
+
         return;
+
     }
 
 
-    if (Notification.permission !== "granted") {
+    if (
+        Notification.permission !==
+        "granted"
+    ) {
+
         return;
+
     }
 
 
@@ -250,27 +336,36 @@ function showProviderNotification(
                 title,
                 {
                     body: message,
-                    icon: "/static/images/logo.png",
-                    tag: "yashway-booking"
+
+                    /*
+                     Logo file नसेल तरी
+                     notification बंद होणार नाही.
+                    */
+
+                    tag:
+                        "yashway-booking-" +
+                        Date.now()
                 }
             );
 
 
         /*
-         Notification वर click केल्यावर
-         provider dashboard focus करा.
+         Notification click
         */
 
-        notification.onclick = function () {
+        notification.onclick =
+            function () {
 
-            window.focus();
+                window.focus();
 
-            notification.close();
+                notification.close();
 
-        };
+            };
 
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.log(
             "Notification error:",
@@ -301,7 +396,23 @@ function playNotificationSound() {
 
 
         if (!audioContext) {
+
             return;
+
+        }
+
+
+        /*
+         AudioContext resume
+        */
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext.resume();
+
         }
 
 
@@ -313,14 +424,18 @@ function playNotificationSound() {
             audioContext.createGain();
 
 
-        oscillator.connect(gainNode);
+        oscillator.connect(
+            gainNode
+        );
+
 
         gainNode.connect(
             audioContext.destination
         );
 
 
-        oscillator.type = "sine";
+        oscillator.type =
+            "sine";
 
 
         oscillator.frequency.setValueAtTime(
@@ -339,11 +454,14 @@ function playNotificationSound() {
 
 
         oscillator.stop(
-            audioContext.currentTime + 0.35
+            audioContext.currentTime +
+            0.35
         );
 
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.log(
             "Sound unavailable:",
@@ -359,7 +477,9 @@ function playNotificationSound() {
    ADD NEW BOOKING TO DASHBOARD
    ========================================================= */
 
-function addNewBookingCard(booking) {
+function addNewBookingCard(
+    booking
+) {
 
     const container =
         document.getElementById(
@@ -368,7 +488,9 @@ function addNewBookingCard(booking) {
 
 
     if (!container) {
+
         return;
+
     }
 
 
@@ -405,7 +527,9 @@ function addNewBookingCard(booking) {
 
 
     const card =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
 
     card.className =
@@ -415,6 +539,10 @@ function addNewBookingCard(booking) {
     card.dataset.bookingId =
         booking.id;
 
+
+    /*
+     Booking HTML
+    */
 
     card.innerHTML = `
 
@@ -440,46 +568,55 @@ function addNewBookingCard(booking) {
                 ${booking.name || ""}
             </p>
 
+
             <p>
                 <strong>Mobile:</strong>
                 ${booking.mobile || ""}
             </p>
+
 
             <p>
                 <strong>Service:</strong>
                 ${booking.service || ""}
             </p>
 
+
             <p>
                 <strong>Location:</strong>
                 ${booking.location || ""}
             </p>
+
 
             <p>
                 <strong>Date:</strong>
                 ${booking.date || ""}
             </p>
 
+
             <p>
                 <strong>Time:</strong>
                 ${booking.time || ""}
             </p>
 
+
             ${
                 booking.cost
-                ? `
-                    <p>
-                        <strong>Cost:</strong>
-                        ₹${booking.cost}
-                    </p>
-                  `
-                : ""
+                    ? `
+                        <p>
+                            <strong>Cost:</strong>
+                            ₹${booking.cost}
+                        </p>
+                      `
+                    : ""
             }
 
         </div>
 
 
         <div class="provider-assign">
+
+
+            <!-- ACCEPT -->
 
             <form
                 method="POST"
@@ -510,18 +647,20 @@ function addNewBookingCard(booking) {
             </form>
 
 
+            <!-- REJECT -->
+
             <form
                 method="POST"
                 action="/provider/reject/${booking.id}"
-                onsubmit="
-                    return confirm(
-                        'ही booking reject करायची आहे का?'
-                    );
-                "
                 style="
                     display:inline-block;
                     margin-left:10px;
                     margin-bottom:10px;
+                "
+                onsubmit="
+                    return confirm(
+                        'ही booking reject करायची आहे का?'
+                    );
                 "
             >
 
@@ -543,16 +682,19 @@ function addNewBookingCard(booking) {
 
             </form>
 
+
         </div>
 
     `;
 
 
     /*
-     नवीन booking वरती दाखवा
+     नवीन booking वरच्या बाजूला दाखवा
     */
 
-    container.prepend(card);
+    container.prepend(
+        card
+    );
 
 }
 
@@ -570,13 +712,27 @@ async function checkProviderBookings() {
                 "/provider/notifications",
                 {
                     method: "GET",
+
                     cache: "no-store",
-                    credentials: "same-origin"
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
                 }
             );
 
 
-        if (!response.ok) {
+        /*
+         Server response check
+        */
+
+        if (
+            !response.ok
+        ) {
 
             console.log(
                 "Notification API error:",
@@ -592,9 +748,15 @@ async function checkProviderBookings() {
             await response.json();
 
 
+        /*
+         API data validation
+        */
+
         if (
             !data.success ||
-            !Array.isArray(data.bookings)
+            !Array.isArray(
+                data.bookings
+            )
         ) {
 
             return;
@@ -602,19 +764,29 @@ async function checkProviderBookings() {
         }
 
 
+        /*
+         प्रत्येक booking तपासा
+        */
+
         data.bookings.forEach(
             function (booking) {
 
                 const bookingId =
-                    String(booking.id);
+                    String(
+                        booking.id
+                    );
 
 
                 /*
-                 पहिल्या check मध्ये
-                 जुन्या booking साठी notification नको.
+                 First page check
+
+                 आधीपासून dashboard वर असलेल्या
+                 booking साठी notification नको.
                 */
 
-                if (firstCheck) {
+                if (
+                    firstCheck
+                ) {
 
                     knownBookingIds.add(
                         bookingId
@@ -626,7 +798,7 @@ async function checkProviderBookings() {
 
 
                 /*
-                 नवीन booking
+                 नवीन booking आहे का?
                 */
 
                 if (
@@ -634,6 +806,10 @@ async function checkProviderBookings() {
                         bookingId
                     )
                 ) {
+
+                    /*
+                     ID save करा
+                    */
 
                     knownBookingIds.add(
                         bookingId
@@ -654,26 +830,24 @@ async function checkProviderBookings() {
                             "0"
                         ) +
 
-                        "\nCustomer: " +
-                        (booking.name || "") +
-
                         "\nService: " +
-                        (booking.service || "") +
+                        (
+                            booking.service ||
+                            ""
+                        ) +
 
                         "\nLocation: " +
-                        (booking.location || "") +
-
-                        "\nDate: " +
-                        (booking.date || "") +
-
-                        "\nTime: " +
-                        (booking.time || "")
+                        (
+                            booking.location ||
+                            ""
+                        )
 
                     );
 
 
                     /*
-                     Dashboard वर booking दाखवा
+                     Dashboard वर
+                     नवीन booking दाखवा
                     */
 
                     addNewBookingCard(
@@ -686,10 +860,16 @@ async function checkProviderBookings() {
         );
 
 
+        /*
+         First check complete
+        */
+
         firstCheck = false;
 
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.log(
             "Booking check error:",
@@ -709,12 +889,34 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-
         /*
          Notification permission status
         */
 
         updateNotificationStatus();
+
+
+        /*
+         Enable Notifications button
+         JS मधून connect करा.
+        */
+
+        const notificationButton =
+            document.getElementById(
+                "enable-notifications"
+            );
+
+
+        if (
+            notificationButton
+        ) {
+
+            notificationButton.addEventListener(
+                "click",
+                enableNotifications
+            );
+
+        }
 
 
         /*
@@ -725,7 +927,8 @@ document.addEventListener(
 
 
         /*
-         प्रत्येक 5 seconds ला check
+         प्रत्येक 5 seconds ला
+         नवीन booking check
         */
 
         setInterval(
@@ -735,8 +938,8 @@ document.addEventListener(
 
 
         /*
-         User ने page वर click केल्यावर
-         audio तयार/enable करा.
+         User page वर click केल्यावर
+         AudioContext तयार करा.
         */
 
         document.addEventListener(
