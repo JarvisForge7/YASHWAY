@@ -187,22 +187,68 @@
                     {% if booking["status"] == "Pending" %}
 
 
-                    <form
-                        method="POST"
-                        action="/provider/accept/{{ booking['id'] }}"
-                    >
+                    <<div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:20px;">
 
-                        <button
-                            type="submit"
-                            class="btn primary"
-                        >
+    {% if booking["status"] == "Pending" %}
 
-                            Accept Booking
+        <!-- ACCEPT -->
+        <form method="POST"
+              action="/provider/accept/{{ booking['id'] }}">
 
-                        </button>
+            <button
+                type="submit"
+                class="btn primary"
+                style="background:#2563eb;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;"
+            >
+                ✅ Accept Booking
+            </button>
 
-                    </form>
+        </form>
 
+
+        <!-- REJECT -->
+        <form method="POST"
+              action="/provider/reject/{{ booking['id'] }}"
+              onsubmit="return confirm('ही booking reject करायची आहे का?');">
+
+            <button
+                type="submit"
+                style="background:#dc2626;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;"
+            >
+                ❌ Reject Booking
+            </button>
+
+        </form>
+
+    {% elif booking["status"] == "Accepted" %}
+
+        <form method="POST"
+              action="/provider/complete/{{ booking['id'] }}">
+
+            <button
+                type="submit"
+                class="btn primary"
+            >
+                ✅ Complete Booking
+            </button>
+
+        </form>
+
+    {% elif booking["status"] == "Rejected" %}
+
+        <span style="color:#dc2626;font-weight:bold;">
+            ❌ Booking Rejected
+        </span>
+
+    {% elif booking["status"] == "Completed" %}
+
+        <span style="color:#16a34a;font-weight:bold;">
+            ✅ Booking Completed
+        </span>
+
+    {% endif %}
+
+</div>
 
                     {% elif booking["status"] == "Accepted" %}
 

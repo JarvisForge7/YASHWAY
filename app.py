@@ -1046,7 +1046,62 @@ def provider_accept_booking(booking_id):
     return redirect(
         "/provider/dashboard"
     )
+# =========================================================
+# PROVIDER REJECT BOOKING
+# =========================================================
 
+@app.route(
+    "/provider/reject/<int:booking_id>",
+    methods=["POST"]
+)
+def provider_reject_booking(booking_id):
+
+    if not session.get(
+        "provider_logged_in"
+    ):
+
+        return redirect(
+            "/provider/login"
+        )
+
+    provider_id = session.get(
+        "provider_id"
+    )
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT name
+        FROM providers
+        WHERE id = %s
+    """, (
+        provider_id,
+    ))
+
+    provider = cursor.fetchone()
+
+    if provider:
+
+        cursor.execute("""
+            UPDATE bookings
+            SET status = 'Rejected'
+            WHERE id = %s
+            AND provider = %s
+            AND status = 'Pending'
+        """, (
+            booking_id,
+            provider["name"]
+        ))
+
+        conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        "/provider/dashboard"
+    )
 
 # =========================================================
 # PROVIDER COMPLETE BOOKING
