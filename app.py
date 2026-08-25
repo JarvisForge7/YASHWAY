@@ -908,6 +908,71 @@ def provider_login():
     return render_template(
         "provider_login.html"
     )
+# =========================================================
+# PROVIDER NEW BOOKING CHECK
+# =========================================================
+
+@app.route("/provider/notifications")
+def provider_notifications():
+
+    if not session.get("provider_logged_in"):
+        return {
+            "success": False,
+            "error": "Unauthorized"
+        }, 401
+
+    provider_id = session.get("provider_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Provider चे नाव मिळवा
+    cursor.execute("""
+        SELECT name
+        FROM providers
+        WHERE id = %s
+    """, (
+        provider_id,
+    ))
+
+    provider = cursor.fetchone()
+
+    if not provider:
+        cursor.close()
+        conn.close()
+
+        return {
+            "success": False,
+            "error": "Provider not found"
+        }, 404
+
+    # Pending assigned bookings
+    cursor.execute("""
+        SELECT
+            id,
+            name,
+            service,
+            location,
+            date,
+            time,
+            status
+        FROM bookings
+        WHERE provider = %s
+        AND status = 'Pending'
+        ORDER BY id DESC
+    """, (
+        provider["name"],
+    ))
+
+    bookings = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return {
+        "success": True,
+        "bookings": bookings
+    }
 
 
 # =========================================================
