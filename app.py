@@ -982,49 +982,52 @@ def provider_login():
 # =========================================================
 
 @app.route(
-    # =========================================================
-# PROVIDER NEW BOOKING NOTIFICATIONS
-# =========================================================
-
-@app.route("/provider/notifications")
+    "/provider/notifications",
+    methods=["GET"]
+)
 def provider_notifications():
 
-    if not session.get("provider_logged_in"):
+    # =====================================================
+    # LOGIN CHECK
+    # =====================================================
+
+    if not session.get(
+        "provider_logged_in"
+    ):
 
         return {
             "success": False,
             "error": "Unauthorized"
         }, 401
 
-
     provider_id = session.get(
         "provider_id"
     )
 
-
     conn = get_db_connection()
     cursor = conn.cursor()
 
-
     try:
 
-        # =====================================================
-        # GET PROVIDER
-        # =====================================================
+        # =================================================
+        # GET CURRENT PROVIDER
+        # =================================================
 
         cursor.execute("""
             SELECT
                 id,
-                name
+                name,
+                mobile,
+                service,
+                location,
+                status
             FROM providers
             WHERE id = %s
         """, (
             provider_id,
         ))
 
-
         provider = cursor.fetchone()
-
 
         if not provider:
 
@@ -1033,10 +1036,9 @@ def provider_notifications():
                 "error": "Provider not found"
             }, 404
 
-
-        # =====================================================
+        # =================================================
         # GET PENDING ASSIGNED BOOKINGS
-        # =====================================================
+        # =================================================
 
         cursor.execute("""
             SELECT
@@ -1047,8 +1049,10 @@ def provider_notifications():
                 location,
                 date,
                 time,
+                provider,
                 cost,
-                status
+                status,
+                created_at
             FROM bookings
             WHERE provider = %s
             AND status = 'Pending'
@@ -1057,34 +1061,38 @@ def provider_notifications():
             provider["name"],
         ))
 
-
         bookings = cursor.fetchall()
 
+        # =================================================
+        # RETURN JSON
+        # =================================================
 
         return {
             "success": True,
+            "provider": {
+                "id": provider["id"],
+                "name": provider["name"]
+            },
             "bookings": bookings
         }
 
-
-    except Exception as error:
+    except Exception as e:
 
         print(
             "PROVIDER NOTIFICATION ERROR:",
-            error
+            e
         )
-
 
         return {
             "success": False,
-            "error": "Server error"
+            "error": "Notification server error"
         }, 500
-
 
     finally:
 
         cursor.close()
         conn.close()
+
 
 # =========================================================
 # PROVIDER DASHBOARD
