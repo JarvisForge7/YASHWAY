@@ -1,5 +1,5 @@
+```html
 <!DOCTYPE html>
-
 <html lang="mr">
 
 <head>
@@ -49,6 +49,10 @@
 <div class="admin-container">
 
 
+    <!-- ============================================= -->
+    <!-- PROVIDER HEADER -->
+    <!-- ============================================= -->
+
     <div class="admin-title">
 
         <p>PROVIDER PANEL</p>
@@ -65,6 +69,55 @@
     </div>
 
 
+    <!-- ============================================= -->
+    <!-- NOTIFICATION PERMISSION -->
+    <!-- ============================================= -->
+
+    <div
+        id="notification-box"
+        style="
+            background:#eff6ff;
+            border:1px solid #bfdbfe;
+            padding:18px;
+            border-radius:12px;
+            margin-bottom:25px;
+        "
+    >
+
+        <h3 style="margin-bottom:8px;">
+            🔔 Booking Notifications
+        </h3>
+
+        <p style="color:#475569;margin-bottom:12px;">
+            नवीन booking आली की तुम्हाला notification मिळण्यासाठी
+            notification permission Allow करा.
+        </p>
+
+        <button
+            id="enable-notifications"
+            class="btn primary"
+            type="button"
+            onclick="enableNotifications()"
+        >
+            🔔 Enable Notifications
+        </button>
+
+        <p
+            id="notification-status"
+            style="
+                margin-top:10px;
+                font-size:14px;
+                color:#64748b;
+            "
+        ></p>
+
+    </div>
+
+
+
+    <!-- ============================================= -->
+    <!-- BOOKINGS -->
+    <!-- ============================================= -->
 
     <div class="booking-list">
 
@@ -79,8 +132,13 @@
             {% for booking in bookings %}
 
 
-            <div class="admin-booking-card">
+            <div
+                class="admin-booking-card"
+                data-booking-id="{{ booking['id'] }}"
+            >
 
+
+                <!-- BOOKING HEADER -->
 
                 <div class="booking-header">
 
@@ -104,6 +162,8 @@
                 </div>
 
 
+
+                <!-- BOOKING DETAILS -->
 
                 <div class="booking-details">
 
@@ -178,8 +238,9 @@
 
 
 
+                <!-- ================================= -->
                 <!-- ACTIONS -->
-
+                <!-- ================================= -->
 
                 <div class="provider-assign">
 
@@ -187,115 +248,132 @@
                     {% if booking["status"] == "Pending" %}
 
 
-                    <<div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:20px;">
+                        <!-- ACCEPT -->
 
-    {% if booking["status"] == "Pending" %}
+                        <form
+                            method="POST"
+                            action="/provider/accept/{{ booking['id'] }}"
+                            style="display:inline-block;"
+                        >
 
-        <!-- ACCEPT -->
-        <form method="POST"
-              action="/provider/accept/{{ booking['id'] }}">
+                            <button
+                                type="submit"
+                                class="btn primary"
+                                style="
+                                    background:#2563eb;
+                                    color:white;
+                                    padding:12px 24px;
+                                    border:none;
+                                    border-radius:8px;
+                                    cursor:pointer;
+                                "
+                            >
 
-            <button
-                type="submit"
-                class="btn primary"
-                style="background:#2563eb;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;"
-            >
-                ✅ Accept Booking
-            </button>
+                                ✅ Accept Booking
 
-        </form>
+                            </button>
+
+                        </form>
 
 
-        <!-- REJECT -->
-        <form method="POST"
-              action="/provider/reject/{{ booking['id'] }}"
-              onsubmit="return confirm('ही booking reject करायची आहे का?');">
 
-            <button
-                type="submit"
-                style="background:#dc2626;color:white;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;"
-            >
-                ❌ Reject Booking
-            </button>
+                        <!-- REJECT -->
 
-        </form>
+                        <form
+                            method="POST"
+                            action="/provider/reject/{{ booking['id'] }}"
+                            onsubmit="return confirm('ही booking reject करायची आहे का?');"
+                            style="
+                                display:inline-block;
+                                margin-left:10px;
+                            "
+                        >
 
-    {% elif booking["status"] == "Accepted" %}
+                            <button
+                                type="submit"
+                                style="
+                                    background:#dc2626;
+                                    color:white;
+                                    padding:12px 24px;
+                                    border:none;
+                                    border-radius:8px;
+                                    cursor:pointer;
+                                "
+                            >
 
-        <form method="POST"
-              action="/provider/complete/{{ booking['id'] }}">
+                                ❌ Reject Booking
 
-            <button
-                type="submit"
-                class="btn primary"
-            >
-                ✅ Complete Booking
-            </button>
+                            </button>
 
-        </form>
+                        </form>
 
-    {% elif booking["status"] == "Rejected" %}
-
-        <span style="color:#dc2626;font-weight:bold;">
-            ❌ Booking Rejected
-        </span>
-
-    {% elif booking["status"] == "Completed" %}
-
-        <span style="color:#16a34a;font-weight:bold;">
-            ✅ Booking Completed
-        </span>
-
-    {% endif %}
-
-</div>
 
                     {% elif booking["status"] == "Accepted" %}
 
 
-                    <p class="assigned-provider">
+                        <p class="assigned-provider">
 
-                        🟢 Booking Accepted
+                            🟢 Booking Accepted
 
-                    </p>
+                        </p>
 
 
-                    <form
-                        method="POST"
-                        action="/provider/complete/{{ booking['id'] }}"
-                        style="margin-top:12px;"
-                    >
-
-                        <button
-                            type="submit"
-                            class="btn primary"
+                        <form
+                            method="POST"
+                            action="/provider/complete/{{ booking['id'] }}"
+                            style="margin-top:12px;"
                         >
 
-                            Mark as Completed
+                            <button
+                                type="submit"
+                                class="btn primary"
+                            >
 
-                        </button>
+                                ✅ Mark as Completed
 
-                    </form>
+                            </button>
+
+                        </form>
+
+
+                    {% elif booking["status"] == "Rejected" %}
+
+
+                        <p
+                            style="
+                                color:#dc2626;
+                                font-weight:bold;
+                            "
+                        >
+
+                            ❌ Booking Rejected
+
+                        </p>
 
 
                     {% elif booking["status"] == "Completed" %}
 
 
-                    <p class="assigned-provider">
+                        <p class="assigned-provider">
 
-                        🟢 Service Completed
+                            🟢 Service Completed
 
-                    </p>
+                        </p>
 
 
                     {% elif booking["status"] == "Cancelled" %}
 
 
-                    <p>
+                        <p
+                            style="
+                                color:#dc2626;
+                                font-weight:bold;
+                            "
+                        >
 
-                        🔴 Booking Cancelled
+                            🔴 Booking Cancelled
 
-                    </p>
+                        </p>
 
 
                     {% endif %}
@@ -337,6 +415,264 @@
 </section>
 
 
+
+<!-- ================================================= -->
+<!-- NOTIFICATION + SOUND JAVASCRIPT -->
+<!-- ================================================= -->
+
+<script>
+
+let notificationPermission = false;
+
+
+/* ================================================
+   ENABLE NOTIFICATIONS
+================================================ */
+
+async function enableNotifications() {
+
+    const status =
+        document.getElementById(
+            "notification-status"
+        );
+
+    const button =
+        document.getElementById(
+            "enable-notifications"
+        );
+
+
+    if (!("Notification" in window)) {
+
+        status.textContent =
+            "❌ या browser मध्ये notifications support नाही.";
+
+        return;
+
+    }
+
+
+    try {
+
+        const permission =
+            await Notification.requestPermission();
+
+
+        if (permission === "granted") {
+
+            notificationPermission = true;
+
+            status.textContent =
+                "✅ Notifications चालू आहेत.";
+
+            button.textContent =
+                "✅ Notifications Enabled";
+
+            button.disabled = true;
+
+
+            /* Test notification */
+
+            showProviderNotification(
+                "YASHWAY",
+                "🔔 Booking notifications successfully enabled."
+            );
+
+
+        }
+
+        else if (permission === "denied") {
+
+            status.textContent =
+                "❌ Notifications blocked आहेत. Browser settings मधून Allow करा.";
+
+        }
+
+        else {
+
+            status.textContent =
+                "⚠️ Notification permission दिलेली नाही.";
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Notification error:",
+            error
+        );
+
+        status.textContent =
+            "❌ Notification सुरू करता आली नाही.";
+
+    }
+
+}
+
+
+/* ================================================
+   SHOW NOTIFICATION
+================================================ */
+
+function showProviderNotification(
+    title,
+    message
+) {
+
+    if (
+        !("Notification" in window)
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        Notification.permission !==
+        "granted"
+    ) {
+
+        return;
+
+    }
+
+
+    new Notification(
+        title,
+        {
+            body: message,
+            icon: "/static/favicon.ico"
+        }
+    );
+
+
+    playNotificationSound();
+
+}
+
+
+/* ================================================
+   NOTIFICATION SOUND
+================================================ */
+
+function playNotificationSound() {
+
+    try {
+
+        const audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+
+        const oscillator =
+            audioContext.createOscillator();
+
+
+        const gainNode =
+            audioContext.createGain();
+
+
+        oscillator.connect(
+            gainNode
+        );
+
+        gainNode.connect(
+            audioContext.destination
+        );
+
+
+        oscillator.frequency.value =
+            880;
+
+
+        gainNode.gain.value =
+            0.15;
+
+
+        oscillator.start();
+
+
+        setTimeout(
+            function() {
+
+                oscillator.stop();
+
+            },
+            300
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Sound unavailable:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ================================================
+   PAGE LOAD
+================================================ */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+        ) {
+
+            notificationPermission = true;
+
+            const status =
+                document.getElementById(
+                    "notification-status"
+                );
+
+            const button =
+                document.getElementById(
+                    "enable-notifications"
+                );
+
+
+            if (status) {
+
+                status.textContent =
+                    "✅ Notifications चालू आहेत.";
+
+            }
+
+
+            if (button) {
+
+                button.textContent =
+                    "✅ Notifications Enabled";
+
+                button.disabled = true;
+
+            }
+
+        }
+
+    }
+);
+
+</script>
+
+
 </body>
 
 </html>
+```
