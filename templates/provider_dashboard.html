@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="mr">
 
@@ -16,7 +15,9 @@
 
 </head>
 
+
 <body>
+
 
 <header class="navbar">
 
@@ -27,6 +28,7 @@
         <span>Provider Panel</span>
 
     </div>
+
 
     <nav>
 
@@ -41,14 +43,15 @@
 </header>
 
 
+
 <section class="admin-section">
 
 <div class="admin-container">
 
 
-    <!-- ============================================= -->
-    <!-- PROVIDER HEADER -->
-    <!-- ============================================= -->
+    <!-- =========================================
+         PROVIDER HEADER
+    ========================================== -->
 
     <div class="admin-title">
 
@@ -59,36 +62,43 @@
         </h2>
 
         <p>
-            {{ provider["service"] }} |
+            {{ provider["service"] }}
+            |
             {{ provider["location"] }}
         </p>
 
     </div>
 
 
-    <!-- ============================================= -->
-    <!-- NOTIFICATION PERMISSION -->
-    <!-- ============================================= -->
+
+    <!-- =========================================
+         NOTIFICATION BOX
+    ========================================== -->
 
     <div
         id="notification-box"
         style="
             background:#eff6ff;
             border:1px solid #bfdbfe;
-            padding:18px;
+            padding:20px;
             border-radius:12px;
             margin-bottom:25px;
         "
     >
 
         <h3 style="margin-bottom:8px;">
+
             🔔 Booking Notifications
+
         </h3>
 
-        <p style="
-            color:#475569;
-            margin-bottom:12px;
-        ">
+
+        <p
+            style="
+                color:#475569;
+                margin-bottom:14px;
+            "
+        >
 
             नवीन booking आली की तुम्हाला
             notification आणि sound मिळण्यासाठी
@@ -101,7 +111,6 @@
             id="enable-notifications"
             class="btn primary"
             type="button"
-            
         >
 
             🔔 Enable Notifications
@@ -121,9 +130,10 @@
     </div>
 
 
-    <!-- ============================================= -->
-    <!-- BOOKINGS -->
-    <!-- ============================================= -->
+
+    <!-- =========================================
+         BOOKINGS
+    ========================================== -->
 
     <div class="booking-list">
 
@@ -133,6 +143,7 @@
 
 
         <div id="bookings-container">
+
 
         {% if bookings %}
 
@@ -168,6 +179,7 @@
                     </span>
 
                 </div>
+
 
 
                 <!-- BOOKING DETAILS -->
@@ -259,9 +271,10 @@
                 </div>
 
 
-                <!-- ================================= -->
-                <!-- ACTIONS -->
-                <!-- ================================= -->
+
+                <!-- =================================
+                     ACTIONS
+                ================================== -->
 
                 <div class="provider-assign">
 
@@ -269,139 +282,140 @@
                     {% if booking["status"] == "Pending" %}
 
 
-                        <!-- ACCEPT -->
+                    <!-- ACCEPT -->
 
-                        <form
-                            method="POST"
-                            action="/provider/accept/{{ booking['id'] }}"
+                    <form
+                        method="POST"
+                        action="/provider/accept/{{ booking['id'] }}"
+                        style="
+                            display:inline-block;
+                            margin-bottom:10px;
+                        "
+                    >
+
+                        <button
+                            type="submit"
+                            class="btn primary"
                             style="
-                                display:inline-block;
-                                margin-bottom:10px;
+                                background:#2563eb;
+                                color:white;
+                                padding:12px 24px;
+                                border:none;
+                                border-radius:8px;
+                                cursor:pointer;
                             "
                         >
 
-                            <button
-                                type="submit"
-                                class="btn primary"
-                                style="
-                                    background:#2563eb;
-                                    color:white;
-                                    padding:12px 24px;
-                                    border:none;
-                                    border-radius:8px;
-                                    cursor:pointer;
-                                "
-                            >
+                            ✅ Accept Booking
 
-                                ✅ Accept Booking
+                        </button>
 
-                            </button>
-
-                        </form>
+                    </form>
 
 
-                        <!-- REJECT -->
 
-                        <form
-                            method="POST"
-                            action="/provider/reject/{{ booking['id'] }}"
-                            onsubmit="
-                                return confirm(
-                                    'ही booking reject करायची आहे का?'
-                                );
-                            "
+                    <!-- REJECT -->
+
+                    <form
+                        method="POST"
+                        action="/provider/reject/{{ booking['id'] }}"
+                        onsubmit="
+                            return confirm(
+                                'ही booking reject करायची आहे का?'
+                            );
+                        "
+                        style="
+                            display:inline-block;
+                            margin-left:10px;
+                            margin-bottom:10px;
+                        "
+                    >
+
+                        <button
+                            type="submit"
                             style="
-                                display:inline-block;
-                                margin-left:10px;
-                                margin-bottom:10px;
+                                background:#dc2626;
+                                color:white;
+                                padding:12px 24px;
+                                border:none;
+                                border-radius:8px;
+                                cursor:pointer;
                             "
                         >
 
-                            <button
-                                type="submit"
-                                style="
-                                    background:#dc2626;
-                                    color:white;
-                                    padding:12px 24px;
-                                    border:none;
-                                    border-radius:8px;
-                                    cursor:pointer;
-                                "
-                            >
+                            ❌ Reject Booking
 
-                                ❌ Reject Booking
+                        </button>
 
-                            </button>
-
-                        </form>
+                    </form>
 
 
                     {% elif booking["status"] == "Accepted" %}
 
 
-                        <p class="assigned-provider">
+                    <p class="assigned-provider">
 
-                            🟢 Booking Accepted
+                        🟢 Booking Accepted
 
-                        </p>
+                    </p>
 
 
-                        <form
-                            method="POST"
-                            action="/provider/complete/{{ booking['id'] }}"
-                            style="margin-top:12px;"
+                    <form
+                        method="POST"
+                        action="/provider/complete/{{ booking['id'] }}"
+                        style="margin-top:12px;"
+                    >
+
+                        <button
+                            type="submit"
+                            class="btn primary"
                         >
 
-                            <button
-                                type="submit"
-                                class="btn primary"
-                            >
+                            ✅ Mark as Completed
 
-                                ✅ Mark as Completed
+                        </button>
 
-                            </button>
-
-                        </form>
+                    </form>
 
 
                     {% elif booking["status"] == "Rejected" %}
 
 
-                        <p
-                            style="
-                                color:#dc2626;
-                                font-weight:bold;
-                            "
-                        >
+                    <p
+                        style="
+                            color:#dc2626;
+                            font-weight:bold;
+                        "
+                    >
 
-                            ❌ Booking Rejected
+                        ❌ Booking Rejected
 
-                        </p>
+                    </p>
 
 
                     {% elif booking["status"] == "Completed" %}
 
 
-                        <p class="assigned-provider">
+                    <p class="assigned-provider">
 
-                            🟢 Service Completed
+                        🟢 Service Completed
 
-                        </p>
+                    </p>
 
 
                     {% elif booking["status"] == "Cancelled" %}
 
 
-                        <p
-                            style="
-                                color:#dc2626;
-                                font-weight:bold;
-                            "
-                        >
+                    <p
+                        style="
+                            color:#dc2626;
+                            font-weight:bold;
+                        "
+                    >
 
-                            🔴 Booking Cancelled
+                        🔴 Booking Cancelled
 
-                        </p>
+                    </p>
 
 
                     {% endif %}
@@ -437,6 +451,7 @@
 
         {% endif %}
 
+
         </div>
 
 
@@ -448,16 +463,17 @@
 </section>
 
 
-<!-- ================================================= -->
-<!-- PROVIDER NOTIFICATION SYSTEM -->
-<!-- ================================================= -->
+
+<!-- =============================================
+     PROVIDER NOTIFICATION JAVASCRIPT
+================================================ -->
 
 <script
     src="{{ url_for('static', filename='js/provider_notifications.js') }}"
+    defer
 ></script>
 
 
 </body>
 
 </html>
-```

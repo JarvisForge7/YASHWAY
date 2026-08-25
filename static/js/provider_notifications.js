@@ -1,16 +1,23 @@
-```javascript
 /* =========================================================
    YASHWAY PROVIDER NOTIFICATION SYSTEM
    ========================================================= */
 
+"use strict";
+
+
 let knownBookingIds = new Set();
+
 let firstCheck = true;
+
 let audioContext = null;
+
+let checkingBookings = false;
+
 
 
 /* =========================================================
-   AUDIO SETUP
-   ========================================================= */
+   AUDIO
+========================================================= */
 
 function prepareAudio() {
 
@@ -18,22 +25,39 @@ function prepareAudio() {
 
         if (!audioContext) {
 
-            audioContext = new (
+            const AudioContext =
                 window.AudioContext ||
-                window.webkitAudioContext
-            )();
+                window.webkitAudioContext;
+
+            if (!AudioContext) {
+
+                console.log(
+                    "AudioContext not supported"
+                );
+
+                return;
+
+            }
+
+            audioContext =
+                new AudioContext();
 
         }
 
-        if (audioContext.state === "suspended") {
+
+        if (
+            audioContext.state === "suspended"
+        ) {
 
             audioContext.resume();
 
         }
 
-    } catch (error) {
+    }
 
-        console.log(
+    catch (error) {
+
+        console.error(
             "Audio context error:",
             error
         );
@@ -43,9 +67,106 @@ function prepareAudio() {
 }
 
 
+
 /* =========================================================
-   UPDATE NOTIFICATION STATUS
-   ========================================================= */
+   SOUND
+========================================================= */
+
+function playNotificationSound() {
+
+    try {
+
+        prepareAudio();
+
+
+        if (!audioContext) {
+
+            return;
+
+        }
+
+
+        const oscillator =
+            audioContext.createOscillator();
+
+
+        const gainNode =
+            audioContext.createGain();
+
+
+        oscillator.connect(
+            gainNode
+        );
+
+
+        gainNode.connect(
+            audioContext.destination
+        );
+
+
+        oscillator.type =
+            "sine";
+
+
+        const now =
+            audioContext.currentTime;
+
+
+        oscillator.frequency.setValueAtTime(
+            880,
+            now
+        );
+
+
+        oscillator.frequency.setValueAtTime(
+            660,
+            now + 0.18
+        );
+
+
+        gainNode.gain.setValueAtTime(
+            0.001,
+            now
+        );
+
+
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.25,
+            now + 0.03
+        );
+
+
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.001,
+            now + 0.5
+        );
+
+
+        oscillator.start(now);
+
+
+        oscillator.stop(
+            now + 0.5
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Sound error:",
+            error
+        );
+
+    }
+
+}
+
+
+
+/* =========================================================
+   STATUS
+========================================================= */
 
 function updateNotificationStatus() {
 
@@ -53,6 +174,7 @@ function updateNotificationStatus() {
         document.getElementById(
             "notification-status"
         );
+
 
     const button =
         document.getElementById(
@@ -67,12 +189,15 @@ function updateNotificationStatus() {
     }
 
 
-    if (!("Notification" in window)) {
+    if (
+        !("Notification" in window)
+    ) {
 
         status.textContent =
             "❌ या browser मध्ये notifications support नाही.";
 
-        button.style.display = "none";
+        button.style.display =
+            "none";
 
         return;
 
@@ -90,7 +215,11 @@ function updateNotificationStatus() {
         button.textContent =
             "✅ Notifications Enabled";
 
-        button.disabled = true;
+        button.disabled =
+            true;
+
+        button.style.opacity =
+            "0.7";
 
     }
 
@@ -105,7 +234,8 @@ function updateNotificationStatus() {
         button.textContent =
             "🔔 Enable Notifications";
 
-        button.disabled = false;
+        button.disabled =
+            false;
 
     }
 
@@ -117,16 +247,18 @@ function updateNotificationStatus() {
         button.textContent =
             "🔔 Enable Notifications";
 
-        button.disabled = false;
+        button.disabled =
+            false;
 
     }
 
 }
 
 
+
 /* =========================================================
    ENABLE NOTIFICATIONS
-   ========================================================= */
+========================================================= */
 
 async function enableNotifications() {
 
@@ -134,6 +266,7 @@ async function enableNotifications() {
         document.getElementById(
             "notification-status"
         );
+
 
     const button =
         document.getElementById(
@@ -144,7 +277,9 @@ async function enableNotifications() {
     prepareAudio();
 
 
-    if (!("Notification" in window)) {
+    if (
+        !("Notification" in window)
+    ) {
 
         if (status) {
 
@@ -164,14 +299,8 @@ async function enableNotifications() {
             Notification.permission;
 
 
-        /*
-         Browser ने आधी permission दिलेली नसेल
-         तर permission मागा.
-        */
-
         if (
-            permission !==
-            "granted"
+            permission !== "granted"
         ) {
 
             permission =
@@ -180,93 +309,64 @@ async function enableNotifications() {
         }
 
 
-        /*
-         Permission GRANTED
-        */
-
         if (
-            permission ===
-            "granted"
+            permission === "granted"
         ) {
 
             updateNotificationStatus();
 
 
-            /*
-             Test notification
-            */
+            /* TEST NOTIFICATION */
 
-            try {
-
-                const notification =
-                    new Notification(
-                        "YASHWAY 🔔",
-                        {
-                            body:
-                                "Booking notifications चालू झाले आहेत.",
-                            tag:
-                                "yashway-test-notification"
-                        }
-                    );
-
-
-                notification.onclick =
-                    function () {
-
-                        window.focus();
-
-                        notification.close();
-
-                    };
-
-            } catch (error) {
-
-                console.log(
-                    "Test notification error:",
-                    error
+            const testNotification =
+                new Notification(
+                    "YASHWAY 🔔",
+                    {
+                        body:
+                            "Booking notifications चालू झाले आहेत."
+                    }
                 );
 
-            }
+
+            testNotification.onclick =
+                function () {
+
+                    window.focus();
+
+                    testNotification.close();
+
+                };
 
 
-            /*
-             Test sound
-            */
+            /* TEST SOUND */
 
             playNotificationSound();
 
 
             /*
-             Immediately check bookings
+             IMPORTANT:
+             Permission मिळाल्यानंतर
+             current bookings पुन्हा check करू.
             */
+
+            firstCheck = true;
 
             await checkProviderBookings();
 
         }
 
-
-        /*
-         Permission DENIED
-        */
-
         else if (
-            permission ===
-            "denied"
+            permission === "denied"
         ) {
 
             if (status) {
 
                 status.textContent =
-                    "❌ Notifications blocked आहेत. Browser settings मधून Allow करा.";
+                    "❌ Notifications blocked आहेत. Chrome Site Settings मधून Allow करा.";
 
             }
 
         }
-
-
-        /*
-         Permission DEFAULT
-        */
 
         else {
 
@@ -284,7 +384,7 @@ async function enableNotifications() {
     catch (error) {
 
         console.error(
-            "Notification error:",
+            "Notification permission error:",
             error
         );
 
@@ -301,9 +401,10 @@ async function enableNotifications() {
 }
 
 
+
 /* =========================================================
-   SHOW PROVIDER NOTIFICATION
-   ========================================================= */
+   SHOW NOTIFICATION
+========================================================= */
 
 function showProviderNotification(
     title,
@@ -336,22 +437,12 @@ function showProviderNotification(
                 title,
                 {
                     body: message,
-
-                    /*
-                     Logo file नसेल तरी
-                     notification बंद होणार नाही.
-                    */
-
                     tag:
                         "yashway-booking-" +
                         Date.now()
                 }
             );
 
-
-        /*
-         Notification click
-        */
 
         notification.onclick =
             function () {
@@ -367,7 +458,7 @@ function showProviderNotification(
 
     catch (error) {
 
-        console.log(
+        console.error(
             "Notification error:",
             error
         );
@@ -375,107 +466,15 @@ function showProviderNotification(
     }
 
 
-    /*
-     🔊 Sound
-    */
-
     playNotificationSound();
 
 }
 
 
-/* =========================================================
-   NOTIFICATION SOUND
-   ========================================================= */
-
-function playNotificationSound() {
-
-    try {
-
-        prepareAudio();
-
-
-        if (!audioContext) {
-
-            return;
-
-        }
-
-
-        /*
-         AudioContext resume
-        */
-
-        if (
-            audioContext.state ===
-            "suspended"
-        ) {
-
-            audioContext.resume();
-
-        }
-
-
-        const oscillator =
-            audioContext.createOscillator();
-
-
-        const gainNode =
-            audioContext.createGain();
-
-
-        oscillator.connect(
-            gainNode
-        );
-
-
-        gainNode.connect(
-            audioContext.destination
-        );
-
-
-        oscillator.type =
-            "sine";
-
-
-        oscillator.frequency.setValueAtTime(
-            880,
-            audioContext.currentTime
-        );
-
-
-        gainNode.gain.setValueAtTime(
-            0.25,
-            audioContext.currentTime
-        );
-
-
-        oscillator.start();
-
-
-        oscillator.stop(
-            audioContext.currentTime +
-            0.35
-        );
-
-
-    }
-
-    catch (error) {
-
-        console.log(
-            "Sound unavailable:",
-            error
-        );
-
-    }
-
-}
-
 
 /* =========================================================
-   ADD NEW BOOKING TO DASHBOARD
-   ========================================================= */
+   ADD BOOKING CARD
+========================================================= */
 
 function addNewBookingCard(
     booking
@@ -494,9 +493,7 @@ function addNewBookingCard(
     }
 
 
-    /*
-     "No bookings yet" remove करा
-    */
+    /* Remove no booking */
 
     const noBooking =
         container.querySelector(
@@ -511,15 +508,15 @@ function addNewBookingCard(
     }
 
 
-    /*
-     Duplicate booking card तयार होऊ देऊ नका
-    */
+    /* Duplicate protection */
 
-    if (
+    const existing =
         container.querySelector(
             `[data-booking-id="${booking.id}"]`
-        )
-    ) {
+        );
+
+
+    if (existing) {
 
         return;
 
@@ -540,18 +537,21 @@ function addNewBookingCard(
         booking.id;
 
 
-    /*
-     Booking HTML
-    */
+    const bookingNumber =
+        String(
+            booking.id
+        ).padStart(
+            4,
+            "0"
+        );
+
 
     card.innerHTML = `
 
         <div class="booking-header">
 
             <h3>
-                Booking #YWS-${String(
-                    booking.id
-                ).padStart(4, "0")}
+                Booking #YWS-${bookingNumber}
             </h3>
 
             <span class="status">
@@ -565,58 +565,49 @@ function addNewBookingCard(
 
             <p>
                 <strong>Customer:</strong>
-                ${booking.name || ""}
+                ${escapeHtml(booking.name)}
             </p>
-
 
             <p>
                 <strong>Mobile:</strong>
-                ${booking.mobile || ""}
+                ${escapeHtml(booking.mobile)}
             </p>
-
 
             <p>
                 <strong>Service:</strong>
-                ${booking.service || ""}
+                ${escapeHtml(booking.service)}
             </p>
-
 
             <p>
                 <strong>Location:</strong>
-                ${booking.location || ""}
+                ${escapeHtml(booking.location)}
             </p>
-
 
             <p>
                 <strong>Date:</strong>
-                ${booking.date || ""}
+                ${escapeHtml(booking.date)}
             </p>
-
 
             <p>
                 <strong>Time:</strong>
-                ${booking.time || ""}
+                ${escapeHtml(booking.time)}
             </p>
-
 
             ${
                 booking.cost
-                    ? `
-                        <p>
-                            <strong>Cost:</strong>
-                            ₹${booking.cost}
-                        </p>
-                      `
-                    : ""
+                ? `
+                    <p>
+                        <strong>Cost:</strong>
+                        ₹${escapeHtml(booking.cost)}
+                    </p>
+                  `
+                : ""
             }
 
         </div>
 
 
         <div class="provider-assign">
-
-
-            <!-- ACCEPT -->
 
             <form
                 method="POST"
@@ -630,14 +621,6 @@ function addNewBookingCard(
                 <button
                     type="submit"
                     class="btn primary"
-                    style="
-                        background:#2563eb;
-                        color:white;
-                        padding:12px 24px;
-                        border:none;
-                        border-radius:8px;
-                        cursor:pointer;
-                    "
                 >
 
                     ✅ Accept Booking
@@ -647,20 +630,18 @@ function addNewBookingCard(
             </form>
 
 
-            <!-- REJECT -->
-
             <form
                 method="POST"
                 action="/provider/reject/${booking.id}"
-                style="
-                    display:inline-block;
-                    margin-left:10px;
-                    margin-bottom:10px;
-                "
                 onsubmit="
                     return confirm(
                         'ही booking reject करायची आहे का?'
                     );
+                "
+                style="
+                    display:inline-block;
+                    margin-left:10px;
+                    margin-bottom:10px;
                 "
             >
 
@@ -682,14 +663,13 @@ function addNewBookingCard(
 
             </form>
 
-
         </div>
 
     `;
 
 
     /*
-     नवीन booking वरच्या बाजूला दाखवा
+     नवीन booking वरती
     */
 
     container.prepend(
@@ -699,11 +679,49 @@ function addNewBookingCard(
 }
 
 
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+
 /* =========================================================
    CHECK PROVIDER BOOKINGS
-   ========================================================= */
+========================================================= */
 
 async function checkProviderBookings() {
+
+    if (checkingBookings) {
+
+        return;
+
+    }
+
+
+    checkingBookings = true;
+
 
     try {
 
@@ -712,12 +730,8 @@ async function checkProviderBookings() {
                 "/provider/notifications",
                 {
                     method: "GET",
-
                     cache: "no-store",
-
-                    credentials:
-                        "same-origin",
-
+                    credentials: "same-origin",
                     headers: {
                         "Accept":
                             "application/json"
@@ -725,10 +739,6 @@ async function checkProviderBookings() {
                 }
             );
 
-
-        /*
-         Server response check
-        */
 
         if (
             !response.ok
@@ -748,10 +758,6 @@ async function checkProviderBookings() {
             await response.json();
 
 
-        /*
-         API data validation
-        */
-
         if (
             !data.success ||
             !Array.isArray(
@@ -764,10 +770,6 @@ async function checkProviderBookings() {
         }
 
 
-        /*
-         प्रत्येक booking तपासा
-        */
-
         data.bookings.forEach(
             function (booking) {
 
@@ -778,15 +780,11 @@ async function checkProviderBookings() {
 
 
                 /*
-                 First page check
-
-                 आधीपासून dashboard वर असलेल्या
-                 booking साठी notification नको.
+                 First check:
+                 existing bookings save करा.
                 */
 
-                if (
-                    firstCheck
-                ) {
+                if (firstCheck) {
 
                     knownBookingIds.add(
                         bookingId
@@ -798,7 +796,7 @@ async function checkProviderBookings() {
 
 
                 /*
-                 नवीन booking आहे का?
+                 New booking
                 */
 
                 if (
@@ -807,18 +805,10 @@ async function checkProviderBookings() {
                     )
                 ) {
 
-                    /*
-                     ID save करा
-                    */
-
                     knownBookingIds.add(
                         bookingId
                     );
 
-
-                    /*
-                     🔔 Notification
-                    */
 
                     showProviderNotification(
 
@@ -830,25 +820,17 @@ async function checkProviderBookings() {
                             "0"
                         ) +
 
+                        "\nCustomer: " +
+                        (booking.name || "") +
+
                         "\nService: " +
-                        (
-                            booking.service ||
-                            ""
-                        ) +
+                        (booking.service || "") +
 
                         "\nLocation: " +
-                        (
-                            booking.location ||
-                            ""
-                        )
+                        (booking.location || "")
 
                     );
 
-
-                    /*
-                     Dashboard वर
-                     नवीन booking दाखवा
-                    */
 
                     addNewBookingCard(
                         booking
@@ -860,58 +842,58 @@ async function checkProviderBookings() {
         );
 
 
-        /*
-         First check complete
-        */
-
         firstCheck = false;
-
 
     }
 
     catch (error) {
 
-        console.log(
+        console.error(
             "Booking check error:",
             error
         );
 
     }
 
+    finally {
+
+        checkingBookings = false;
+
+    }
+
 }
+
 
 
 /* =========================================================
    PAGE LOAD
-   ========================================================= */
+========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        /*
-         Notification permission status
-        */
+        console.log(
+            "YASHWAY Provider Notification System Loaded"
+        );
+
+
+        /* Permission status */
 
         updateNotificationStatus();
 
 
-        /*
-         Enable Notifications button
-         JS मधून connect करा.
-        */
+        /* Button */
 
-        const notificationButton =
+        const button =
             document.getElementById(
                 "enable-notifications"
             );
 
 
-        if (
-            notificationButton
-        ) {
+        if (button) {
 
-            notificationButton.addEventListener(
+            button.addEventListener(
                 "click",
                 enableNotifications
             );
@@ -920,26 +902,8 @@ document.addEventListener(
 
 
         /*
-         First booking check
-        */
-
-        checkProviderBookings();
-
-
-        /*
-         प्रत्येक 5 seconds ला
-         नवीन booking check
-        */
-
-        setInterval(
-            checkProviderBookings,
-            5000
-        );
-
-
-        /*
-         User page वर click केल्यावर
-         AudioContext तयार करा.
+         Browser मध्ये user interaction
+         झाल्यावर audio unlock.
         */
 
         document.addEventListener(
@@ -954,6 +918,22 @@ document.addEventListener(
             }
         );
 
+
+        /*
+         First booking check
+        */
+
+        checkProviderBookings();
+
+
+        /*
+         प्रत्येक 5 seconds
+        */
+
+        setInterval(
+            checkProviderBookings,
+            5000
+        );
+
     }
 );
-```
