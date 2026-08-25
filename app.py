@@ -4,7 +4,9 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 
+
 app = Flask(__name__)
+
 
 # =========================================================
 # APP CONFIG
@@ -25,7 +27,9 @@ ADMIN_PASSWORD = os.environ.get(
     "YASHWAY@123"
 )
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL"
+)
 
 
 # =========================================================
@@ -55,7 +59,7 @@ def init_db():
     cursor = conn.cursor()
 
     # =====================================================
-    # BOOKINGS
+    # BOOKINGS TABLE
     # =====================================================
 
     cursor.execute("""
@@ -76,7 +80,7 @@ def init_db():
     """)
 
     # =====================================================
-    # PROVIDERS
+    # PROVIDERS TABLE
     # =====================================================
 
     cursor.execute("""
@@ -126,11 +130,16 @@ try:
 
     init_db()
 
-    print("DATABASE INITIALIZED SUCCESSFULLY")
+    print(
+        "DATABASE INITIALIZED SUCCESSFULLY"
+    )
 
 except Exception as e:
 
-    print("DATABASE INITIALIZATION ERROR:", e)
+    print(
+        "DATABASE INITIALIZATION ERROR:",
+        e
+    )
 
 
 # =========================================================
@@ -140,7 +149,9 @@ except Exception as e:
 @app.route("/")
 def home():
 
-    return render_template("index.html")
+    return render_template(
+        "index.html"
+    )
 
 
 # =========================================================
@@ -150,14 +161,19 @@ def home():
 @app.route("/services")
 def services():
 
-    return render_template("services.html")
+    return render_template(
+        "services.html"
+    )
 
 
 # =========================================================
 # CUSTOMER BOOKING
 # =========================================================
 
-@app.route("/booking", methods=["GET", "POST"])
+@app.route(
+    "/booking",
+    methods=["GET", "POST"]
+)
 def booking():
 
     if request.method == "POST":
@@ -232,7 +248,8 @@ def booking():
                 time,
                 created_at
             )
-            VALUES (
+            VALUES
+            (
                 %s,
                 %s,
                 %s,
@@ -259,7 +276,9 @@ def booking():
         cursor.close()
         conn.close()
 
-        booking_code = f"YWS-{booking_id:04d}"
+        booking_code = (
+            f"YWS-{booking_id:04d}"
+        )
 
         return render_template(
             "booking_success.html",
@@ -281,7 +300,10 @@ def booking():
 # TRACK BOOKING
 # =========================================================
 
-@app.route("/track", methods=["GET", "POST"])
+@app.route(
+    "/track",
+    methods=["GET", "POST"]
+)
 def track():
 
     booking = None
@@ -345,12 +367,19 @@ def track():
 # ADMIN LOGIN
 # =========================================================
 
-@app.route("/admin/login", methods=["GET", "POST"])
+@app.route(
+    "/admin/login",
+    methods=["GET", "POST"]
+)
 def admin_login():
 
-    if session.get("admin_logged_in"):
+    if session.get(
+        "admin_logged_in"
+    ):
 
-        return redirect("/admin")
+        return redirect(
+            "/admin"
+        )
 
     if request.method == "POST":
 
@@ -369,9 +398,13 @@ def admin_login():
             and password == ADMIN_PASSWORD
         ):
 
-            session["admin_logged_in"] = True
+            session[
+                "admin_logged_in"
+            ] = True
 
-            return redirect("/admin")
+            return redirect(
+                "/admin"
+            )
 
         return render_template(
             "admin_login.html",
@@ -443,7 +476,7 @@ def admin():
     providers = cursor.fetchall()
 
     # =====================================================
-    # TOTAL
+    # TOTAL BOOKINGS
     # =====================================================
 
     cursor.execute("""
@@ -545,10 +578,16 @@ def assign_provider(booking_id):
 
     if not provider_id:
 
-        return redirect("/admin")
+        return redirect(
+            "/admin"
+        )
 
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    # =====================================================
+    # GET PROVIDER
+    # =====================================================
 
     cursor.execute("""
         SELECT *
@@ -562,9 +601,15 @@ def assign_provider(booking_id):
 
     if provider:
 
+        # =================================================
+        # ASSIGN BOOKING
+        # =================================================
+
         cursor.execute("""
             UPDATE bookings
-            SET provider = %s
+            SET
+                provider = %s,
+                status = 'Pending'
             WHERE id = %s
         """, (
             provider["name"],
@@ -722,10 +767,6 @@ def providers():
             ""
         )
 
-        # =================================================
-        # VALIDATION
-        # =================================================
-
         if not all([
             name,
             mobile,
@@ -756,7 +797,8 @@ def providers():
                 status,
                 created_at
             )
-            VALUES (
+            VALUES
+            (
                 %s,
                 %s,
                 %s,
@@ -836,6 +878,8 @@ def delete_provider(provider_id):
     return redirect(
         "/admin/providers"
     )
+
+
 # =========================================================
 # PROVIDER LOGIN
 # =========================================================
@@ -846,10 +890,13 @@ def delete_provider(provider_id):
 )
 def provider_login():
 
-    # Already logged in
-    if session.get("provider_logged_in"):
+    if session.get(
+        "provider_logged_in"
+    ):
 
-        return redirect("/provider/dashboard")
+        return redirect(
+            "/provider/dashboard"
+        )
 
     if request.method == "POST":
 
@@ -890,11 +937,17 @@ def provider_login():
 
         if provider:
 
-            session["provider_logged_in"] = True
+            session[
+                "provider_logged_in"
+            ] = True
 
-            session["provider_id"] = provider["id"]
+            session[
+                "provider_id"
+            ] = provider["id"]
 
-            session["provider_name"] = provider["name"]
+            session[
+                "provider_name"
+            ] = provider["name"]
 
             return redirect(
                 "/provider/dashboard"
@@ -908,81 +961,147 @@ def provider_login():
     return render_template(
         "provider_login.html"
     )
+
+
 # =========================================================
-# PROVIDER NEW BOOKING CHECK
+# PROVIDER NOTIFICATION API
+# =========================================================
+#
+# IMPORTANT:
+# provider_notifications.js ही वेगळी JavaScript file
+# या endpoint ला call करेल.
+#
+# Admin ने provider ला booking assign केल्यानंतर:
+#
+# bookings.provider = provider["name"]
+# bookings.status   = "Pending"
+#
+# Provider dashboard हा endpoint प्रत्येक काही सेकंदांनी
+# check करेल.
+#
 # =========================================================
 
-@app.route("/provider/notifications")
+@app.route(
+    "/provider/notifications",
+    methods=["GET"]
+)
 def provider_notifications():
 
-    if not session.get("provider_logged_in"):
+    # =====================================================
+    # LOGIN CHECK
+    # =====================================================
+
+    if not session.get(
+        "provider_logged_in"
+    ):
+
         return {
             "success": False,
             "error": "Unauthorized"
         }, 401
 
-    provider_id = session.get("provider_id")
+    provider_id = session.get(
+        "provider_id"
+    )
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Provider चे नाव मिळवा
-    cursor.execute("""
-        SELECT name
-        FROM providers
-        WHERE id = %s
-    """, (
-        provider_id,
-    ))
+    try:
 
-    provider = cursor.fetchone()
+        # =================================================
+        # GET CURRENT PROVIDER
+        # =================================================
 
-    if not provider:
-        cursor.close()
-        conn.close()
+        cursor.execute("""
+            SELECT
+                id,
+                name,
+                mobile,
+                service,
+                location,
+                status
+            FROM providers
+            WHERE id = %s
+        """, (
+            provider_id,
+        ))
+
+        provider = cursor.fetchone()
+
+        if not provider:
+
+            return {
+                "success": False,
+                "error": "Provider not found"
+            }, 404
+
+        # =================================================
+        # GET PENDING ASSIGNED BOOKINGS
+        # =================================================
+
+        cursor.execute("""
+            SELECT
+                id,
+                name,
+                mobile,
+                service,
+                location,
+                date,
+                time,
+                provider,
+                cost,
+                status,
+                created_at
+            FROM bookings
+            WHERE provider = %s
+            AND status = 'Pending'
+            ORDER BY id DESC
+        """, (
+            provider["name"],
+        ))
+
+        bookings = cursor.fetchall()
+
+        # =================================================
+        # RETURN JSON
+        # =================================================
+
+        return {
+            "success": True,
+            "provider": {
+                "id": provider["id"],
+                "name": provider["name"]
+            },
+            "bookings": bookings
+        }
+
+    except Exception as e:
+
+        print(
+            "PROVIDER NOTIFICATION ERROR:",
+            e
+        )
 
         return {
             "success": False,
-            "error": "Provider not found"
-        }, 404
+            "error": "Notification server error"
+        }, 500
 
-    # Pending assigned bookings
-    cursor.execute("""
-        SELECT
-            id,
-            name,
-            service,
-            location,
-            date,
-            time,
-            status
-        FROM bookings
-        WHERE provider = %s
-        AND status = 'Pending'
-        ORDER BY id DESC
-    """, (
-        provider["name"],
-    ))
+    finally:
 
-    bookings = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return {
-        "success": True,
-        "bookings": bookings
-    }
+        cursor.close()
+        conn.close()
 
 
 # =========================================================
 # PROVIDER DASHBOARD
 # =========================================================
 
-@app.route("/provider/dashboard")
+@app.route(
+    "/provider/dashboard"
+)
 def provider_dashboard():
-
-    # Login protection
 
     if not session.get(
         "provider_logged_in"
@@ -1013,7 +1132,9 @@ def provider_dashboard():
 
     provider = cursor.fetchone()
 
-    # Provider deleted असल्यास logout
+    # =====================================================
+    # PROVIDER NOT FOUND
+    # =====================================================
 
     if not provider:
 
@@ -1059,7 +1180,9 @@ def provider_dashboard():
     "/provider/accept/<int:booking_id>",
     methods=["POST"]
 )
-def provider_accept_booking(booking_id):
+def provider_accept_booking(
+    booking_id
+):
 
     if not session.get(
         "provider_logged_in"
@@ -1076,7 +1199,9 @@ def provider_accept_booking(booking_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Provider चं नाव शोधा
+    # =====================================================
+    # GET PROVIDER
+    # =====================================================
 
     cursor.execute("""
         SELECT name
@@ -1090,7 +1215,9 @@ def provider_accept_booking(booking_id):
 
     if provider:
 
-        # फक्त स्वतःला assign झालेली booking update करायची
+        # =================================================
+        # ACCEPT ONLY OWN PENDING BOOKING
+        # =================================================
 
         cursor.execute("""
             UPDATE bookings
@@ -1111,6 +1238,8 @@ def provider_accept_booking(booking_id):
     return redirect(
         "/provider/dashboard"
     )
+
+
 # =========================================================
 # PROVIDER REJECT BOOKING
 # =========================================================
@@ -1119,7 +1248,9 @@ def provider_accept_booking(booking_id):
     "/provider/reject/<int:booking_id>",
     methods=["POST"]
 )
-def provider_reject_booking(booking_id):
+def provider_reject_booking(
+    booking_id
+):
 
     if not session.get(
         "provider_logged_in"
@@ -1136,6 +1267,10 @@ def provider_reject_booking(booking_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # =====================================================
+    # GET PROVIDER
+    # =====================================================
+
     cursor.execute("""
         SELECT name
         FROM providers
@@ -1147,6 +1282,10 @@ def provider_reject_booking(booking_id):
     provider = cursor.fetchone()
 
     if provider:
+
+        # =================================================
+        # REJECT ONLY OWN PENDING BOOKING
+        # =================================================
 
         cursor.execute("""
             UPDATE bookings
@@ -1168,6 +1307,7 @@ def provider_reject_booking(booking_id):
         "/provider/dashboard"
     )
 
+
 # =========================================================
 # PROVIDER COMPLETE BOOKING
 # =========================================================
@@ -1176,7 +1316,9 @@ def provider_reject_booking(booking_id):
     "/provider/complete/<int:booking_id>",
     methods=["POST"]
 )
-def provider_complete_booking(booking_id):
+def provider_complete_booking(
+    booking_id
+):
 
     if not session.get(
         "provider_logged_in"
@@ -1193,6 +1335,10 @@ def provider_complete_booking(booking_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # =====================================================
+    # GET PROVIDER
+    # =====================================================
+
     cursor.execute("""
         SELECT name
         FROM providers
@@ -1204,6 +1350,10 @@ def provider_complete_booking(booking_id):
     provider = cursor.fetchone()
 
     if provider:
+
+        # =================================================
+        # COMPLETE ONLY OWN ACCEPTED BOOKING
+        # =================================================
 
         cursor.execute("""
             UPDATE bookings
@@ -1230,7 +1380,9 @@ def provider_complete_booking(booking_id):
 # PROVIDER LOGOUT
 # =========================================================
 
-@app.route("/provider/logout")
+@app.route(
+    "/provider/logout"
+)
 def provider_logout():
 
     session.pop(
@@ -1251,6 +1403,7 @@ def provider_logout():
     return redirect(
         "/provider/login"
     )
+
 
 # =========================================================
 # START SERVER
