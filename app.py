@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, send_from_directory
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -6,6 +6,40 @@ from datetime import datetime
 
 
 app = Flask(__name__)
+# =========================================================
+# PWA MANIFEST
+# =========================================================
+
+@app.route("/manifest.json")
+def pwa_manifest():
+
+    return send_from_directory(
+        os.path.join(
+            app.root_path,
+            "static",
+            "pwa"
+        ),
+        "manifest.json",
+        mimetype="application/manifest+json"
+    )
+
+
+# =========================================================
+# PWA SERVICE WORKER
+# =========================================================
+
+@app.route("/service-worker.js")
+def service_worker():
+
+    return send_from_directory(
+        os.path.join(
+            app.root_path,
+            "static",
+            "pwa"
+        ),
+        "service-worker.js",
+        mimetype="application/javascript"
+    )
 
 
 # =========================================================

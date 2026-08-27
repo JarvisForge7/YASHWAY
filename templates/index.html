@@ -14,6 +14,20 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
 
+          <!-- PWA -->
+<link rel="manifest" href="{{ url_for('pwa_manifest') }}">
+
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="YASHWAY">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
 </head>
 
 
@@ -112,7 +126,16 @@
         </div>
 
     </section>
+<!-- PWA INSTALL BUTTON -->
 
+<button
+    id="install-app-btn"
+    class="btn install-app-btn"
+    style="display: none;"
+    type="button"
+>
+    📱 Install YASHWAY App
+</button>
 
 
     <!-- ================================================= -->
@@ -511,9 +534,165 @@
     <script
         src="{{ url_for('static', filename='js/script.js') }}">
     </script>
+<!-- YASHWAY PWA SERVICE WORKER -->
 
+<script>
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", function () {
+
+        navigator.serviceWorker
+            .register("/service-worker.js")
+            .then(function (registration) {
+
+                console.log(
+                    "YASHWAY Service Worker registered:",
+                    registration.scope
+                );
+
+            })
+            .catch(function (error) {
+
+                console.error(
+                    "YASHWAY Service Worker registration failed:",
+                    error
+                );
+
+            });
+
+    });
+
+}
+
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/static/sw.js")
+            .then(function (registration) {
+                console.log("YASHWAY Service Worker registered:", registration.scope);
+            })
+            .catch(function (error) {
+                console.log("Service Worker registration failed:", error);
+            });
+    });
+}
+</script>
 
 </body>
 
 </html>
 ```
+
+<script>
+/* =========================================================
+   YASHWAY PWA INSTALL SYSTEM
+   ========================================================= */
+
+let deferredInstallPrompt = null;
+
+const installButton = document.getElementById(
+    "install-app-btn"
+);
+
+
+/* =========================================================
+   INSTALL PROMPT AVAILABLE
+   ========================================================= */
+
+window.addEventListener(
+    "beforeinstallprompt",
+    function (event) {
+
+        console.log(
+            "YASHWAY PWA install available"
+        );
+
+        event.preventDefault();
+
+        deferredInstallPrompt = event;
+
+
+        if (installButton) {
+
+            installButton.style.display =
+                "inline-flex";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INSTALL BUTTON CLICK
+   ========================================================= */
+
+if (installButton) {
+
+    installButton.addEventListener(
+        "click",
+        async function () {
+
+            if (!deferredInstallPrompt) {
+
+                alert(
+                    "Install option सध्या उपलब्ध नाही. Chrome menu मधून Install YASHWAY App निवडा."
+                );
+
+                return;
+
+            }
+
+
+            deferredInstallPrompt.prompt();
+
+
+            const result =
+                await deferredInstallPrompt.userChoice;
+
+
+            console.log(
+                "YASHWAY install result:",
+                result.outcome
+            );
+
+
+            deferredInstallPrompt = null;
+
+            installButton.style.display =
+                "none";
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   APP INSTALLED
+   ========================================================= */
+
+window.addEventListener(
+    "appinstalled",
+    function () {
+
+        console.log(
+            "YASHWAY App successfully installed."
+        );
+
+        deferredInstallPrompt = null;
+
+        if (installButton) {
+
+            installButton.style.display =
+                "none";
+
+        }
+
+    }
+);
+
+</script>

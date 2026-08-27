@@ -987,3 +987,32 @@ footer p {
 
 }
 ```
+/* =========================================================
+   YASHWAY PWA INSTALL BUTTON
+   ========================================================= */
+
+.install-app-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 13px 22px;
+    border: 0;
+    border-radius: 10px;
+    background: #111827;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.install-app-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.92;
+}
+
+.install-app-btn:active {
+    transform: translateY(0);
+}
