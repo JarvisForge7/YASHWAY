@@ -1016,3 +1016,42 @@ footer p {
 .install-app-btn:active {
     transform: translateY(0);
 }
+/* =========================================================
+   PROVIDER LOGIN BUTTON
+   ========================================================= */
+
+.provider-login-link {
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   MOBILE NAVIGATION
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .navbar {
+        flex-direction: column;
+        gap: 18px;
+        padding: 20px;
+    }
+
+    .navbar nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .navbar nav a {
+        font-size: 14px;
+    }
+
+    .provider-login-link {
+        border: 1px solid #2563eb;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+}
